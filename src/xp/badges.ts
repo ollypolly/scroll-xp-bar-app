@@ -1,9 +1,9 @@
 import { MAX_LEVEL } from './levelSystem';
 
 /**
- * Military-insignia-inspired rank tiers, one per 10 levels (1-100). Escalating icon
- * complexity and metal/gem color, in the spirit of a Call of Duty-style rank system,
- * without reusing any of its actual names or artwork.
+ * Military-insignia-inspired rank tiers, one per 10 levels (1-99, RuneScape's own cap).
+ * Escalating icon complexity and metal/gem color, in the spirit of a Call of Duty-style
+ * rank system, without reusing any of its actual names or artwork.
  */
 export type RankTier = {
   name: string;
@@ -23,7 +23,7 @@ export const RANK_TIERS: RankTier[] = [
   { name: 'Major', minLevel: 61, maxLevel: 70, color: '#8fd3f4', icon: '✦' },
   { name: 'Colonel', minLevel: 71, maxLevel: 80, color: '#b6e3ff', icon: '✦✦' },
   { name: 'General', minLevel: 81, maxLevel: 90, color: '#7ee8e8', icon: '❈' },
-  { name: 'Commander', minLevel: 91, maxLevel: 100, color: '#f5f5f7', icon: '❈❈' },
+  { name: 'Commander', minLevel: 91, maxLevel: 99, color: '#f5f5f7', icon: '❈❈' },
 ];
 
 export function getRankForLevel(level: number): RankTier {

@@ -11,17 +11,23 @@ export type LevelConfig = {
   scale: number;
 };
 
-// scale tuned so one full level 1->100 run costs ~460k XP - at ~80 XP/short average
-// that's roughly 80 hours of watching, on par with a single RuneScape 99. Ten of
-// those (to reach max prestige) lands around 800 hours, comparable to nine 99s.
+// growthRate widened from RuneScape's real 7 (which doubles the per-level cost every
+// 7 levels - a ~6700x swing from level 1 to 90) to 15, since our XP-per-Short rate is
+// flat, unlike RS where better training methods speed up XP/hour as you level. At 7,
+// squeezing the endpoint down to a sane total made mid-game levels cost less than one
+// Short. At 15 the curve still compounds hard toward the cap - level 99 costs roughly
+// 100x what level 10 does - while never letting a level cost less than a few Shorts.
+// scale tuned so one full level 1->99 run costs ~460k XP - at ~100 XP/short average
+// that's roughly 65-80 hours of watching, on par with a single RuneScape 99. Ten of
+// those (to reach max prestige) lands in the same ballpark as nine RS 99s.
 export const DEFAULT_LEVEL_CONFIG: LevelConfig = {
   growthBase: 300,
-  growthRate: 7,
-  scale: 0.032,
+  growthRate: 15,
+  scale: 3,
 };
 
-/** Levels cap at 100 - reaching it is what unlocks prestiging back to level 1. */
-export const MAX_LEVEL = 100;
+/** Levels cap at 99, RuneScape's own cap - reaching it unlocks prestiging back to level 1. */
+export const MAX_LEVEL = 99;
 
 export type Level = {
   level: number;

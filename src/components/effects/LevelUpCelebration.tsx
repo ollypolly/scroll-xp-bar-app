@@ -109,8 +109,14 @@ export function LevelUpCelebration({ event, onDone }: LevelUpCelebrationProps) {
 
   return (
     <View pointerEvents="box-none" style={styles.container}>
-      <Animated.View style={[styles.ring, { opacity: ringOpacity, transform: [{ scale: ringScale }] }]} />
-      <Animated.View style={[styles.card, { opacity: cardOpacity, transform: [{ scale: cardScale }] }]}>
+      <Animated.View
+        pointerEvents="none"
+        style={[styles.ring, { opacity: ringOpacity, transform: [{ scale: ringScale }] }]}
+      />
+      <Animated.View
+        pointerEvents="box-none"
+        style={[styles.card, { opacity: cardOpacity, transform: [{ scale: cardScale }] }]}
+      >
         <Text style={styles.label}>{isMaxLevel ? 'MAX LEVEL' : isNewRank ? 'RANK UP' : 'LEVEL UP'}</Text>
         <Text style={styles.level}>{displayLevel}</Text>
         {displayRank && (

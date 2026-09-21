@@ -56,7 +56,7 @@ export function DebugPanel({ visible, onClose }: DebugPanelProps) {
 
           <View style={styles.buttonRow}>
             <TouchableOpacity style={styles.actionButton} onPress={forceDebugMaxLevel}>
-              <Text style={styles.actionButtonText}>Force level 100</Text>
+              <Text style={styles.actionButtonText}>Force max level</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionButton, !eligibleForPrestige && styles.actionButtonDisabled]}
