@@ -13,11 +13,13 @@
  *    detectable DOM event; `yt-navigate-finish`/`popstate` short-circuit it when
  *    they do fire.
  *
- * hideYouTubeChrome() is the one exception to "no hard-coded selectors" above - it's
- * purely cosmetic (a CSS display:none, never read from), so a wrong/stale selector just
- * means the topbar stays visible rather than breaking anything. `ytm-mobile-topbar-renderer`
- * is YouTube's mobile-web topbar custom element as of writing; this has NOT been verified
- * against the live page in this session and may need adjusting once seen on-device.
+ * hideYouTubeChrome() and pushDownCaptions() are the exceptions to "no hard-coded
+ * selectors" above - both are purely cosmetic CSS (never read from), so a wrong/stale
+ * selector just means the topbar/captions look as they did before rather than breaking
+ * anything. `ytm-mobile-topbar-renderer` is YouTube's mobile-web topbar custom element,
+ * `.ytp-caption-window-container` is the standard YouTube player's caption box (shared
+ * across youtube.com and the mobile-web player). Neither has been verified against the
+ * live page in this session and may need adjusting once seen on-device.
  */
 export const YOUTUBE_INJECTED_JAVASCRIPT = `
 (function () {
@@ -39,6 +41,18 @@ export const YOUTUBE_INJECTED_JAVASCRIPT = `
     } catch (e) {}
   }
   hideYouTubeChrome();
+
+  function pushDownCaptions() {
+    try {
+      var style = document.createElement('style');
+      style.textContent = [
+        '.ytp-caption-window-container',
+        '{ top: 50px !important; }',
+      ].join(' ');
+      (document.head || document.documentElement).appendChild(style);
+    } catch (e) {}
+  }
+  pushDownCaptions();
 
   function post(event) {
     if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
