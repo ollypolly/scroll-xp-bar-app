@@ -11,10 +11,13 @@ export type LevelConfig = {
   scale: number;
 };
 
+// scale tuned so one full level 1->100 run costs ~460k XP - at ~80 XP/short average
+// that's roughly 80 hours of watching, on par with a single RuneScape 99. Ten of
+// those (to reach max prestige) lands around 800 hours, comparable to nine 99s.
 export const DEFAULT_LEVEL_CONFIG: LevelConfig = {
   growthBase: 300,
   growthRate: 7,
-  scale: 3,
+  scale: 0.032,
 };
 
 /** Levels cap at 100 - reaching it is what unlocks prestiging back to level 1. */

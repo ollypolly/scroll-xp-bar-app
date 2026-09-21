@@ -52,15 +52,27 @@ export const YOUTUBE_INJECTED_JAVASCRIPT = `
     return isFinite(videoEl.duration) && videoEl.duration > 0 ? videoEl.duration : null;
   }
 
-  var state = { videoId: null, videoEl: null, lastProgressPostAt: 0 };
+  var state = { videoId: null, videoEl: null, lastProgressPostAt: 0, lastPosition: null };
 
   function onTimeUpdate(e) {
     var videoEl = e.target;
+    if (!state.videoId) return;
+
+    var position = videoEl.currentTime;
+    var duration = currentDuration(videoEl);
+
+    // Shorts loop by seeking back to 0 instead of firing a real 'ended' event - the
+    // HTML5 spec never fires 'ended' for a looping <video>, it just restarts playback.
+    // A large backward jump after nearing the end of the clip is really "it finished".
+    if (duration && state.lastPosition != null && position < state.lastPosition - 0.5 && state.lastPosition >= duration - 0.75) {
+      post({ type: 'VIDEO_ENDED', videoId: state.videoId, position: duration, duration: duration });
+    }
+    state.lastPosition = position;
+
     var now = Date.now();
     if (now - state.lastProgressPostAt < 300) return;
     state.lastProgressPostAt = now;
-    if (!state.videoId) return;
-    post({ type: 'VIDEO_PROGRESS', videoId: state.videoId, position: videoEl.currentTime, duration: currentDuration(videoEl) });
+    post({ type: 'VIDEO_PROGRESS', videoId: state.videoId, position: position, duration: duration });
   }
 
   function onLoadedMetadata(e) {
@@ -96,6 +108,7 @@ export const YOUTUBE_INJECTED_JAVASCRIPT = `
       if (state.videoEl) detachVideoListeners(state.videoEl);
       state.videoId = urlVideoId;
       state.videoEl = activeEl;
+      state.lastPosition = null;
       if (activeEl) attachVideoListeners(activeEl);
 
       if (previousVideoId === null) {
