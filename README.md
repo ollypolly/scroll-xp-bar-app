@@ -46,6 +46,6 @@ npm test             # jest
 
 ## Known limitations
 
-- The YouTube sign-in flow (account icon on the Shorts screen) goes through Google's login inside the WebView with a spoofed user agent. Google actively detects and can block embedded-webview logins, so this may stop working at any time regardless of the workaround.
+- The YouTube sign-in flow (account icon on the home screen) goes through Google's login inside a WebView with a spoofed user agent. Google actively detects and can block embedded-webview logins, so this may stop working at any time regardless of the workaround.
 - Placeholder sound effects are synthesized tones, not final assets.
-- A Dynamic Island / Live Activity showing level and "rested XP" is a planned future addition, not yet implemented.
+- The Shorts screen's XP pill visually mimics a Dynamic Island but isn't a real one — see [BACKLOG.md](BACKLOG.md).
