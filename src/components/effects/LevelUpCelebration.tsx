@@ -1,12 +1,18 @@
 /* eslint-disable react-hooks/refs -- Animated.Value held in a ref is meant to be read during
  * render; see the same note in XPBar.tsx. */
-import { useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useProgressStore } from '../../store/progressStore';
 import type { LevelUpEvent } from '../../store/progressStore';
 import { colors, radii, spacing } from '../../theme/tokens';
-import { getRankForLevel, type RankTier } from '../../xp/badges';
+import { canPrestige, getPrestigeInfo, getRankForLevel, type RankTier } from '../../xp/badges';
 import { MAX_LEVEL } from '../../xp/levelSystem';
+
+/** Normal level-ups hold briefly then fade; hitting max level holds much longer so
+ * there's a real window to tap the prestige hint before it dismisses itself. */
+const HOLD_MS = 650;
+const MAX_LEVEL_HOLD_MS = 3500;
 
 type LevelUpCelebrationProps = {
   event: LevelUpEvent | null;
@@ -23,6 +29,9 @@ export function LevelUpCelebration({ event, onDone }: LevelUpCelebrationProps) {
   const [isNewRank, setIsNewRank] = useState(false);
   const [isMaxLevel, setIsMaxLevel] = useState(false);
 
+  const prestige = useProgressStore((state) => state.progress.prestige);
+  const prestigeUp = useProgressStore((state) => state.prestigeUp);
+
   const cardScale = useRef(new Animated.Value(0)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
   const ringScale = useRef(new Animated.Value(0)).current;
@@ -30,15 +39,26 @@ export function LevelUpCelebration({ event, onDone }: LevelUpCelebrationProps) {
 
   const lastEventIdRef = useRef<number | null>(null);
 
+  const dismiss = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(cardOpacity, { toValue: 0, duration: 250, useNativeDriver: true }),
+      Animated.timing(cardScale, { toValue: 0.8, duration: 250, useNativeDriver: true }),
+    ]).start(() => {
+      setVisible(false);
+      onDone();
+    });
+  }, [cardOpacity, cardScale, onDone]);
+
   useEffect(() => {
     if (!event || event.id === lastEventIdRef.current) return;
     lastEventIdRef.current = event.id;
 
     const rank = getRankForLevel(event.level);
+    const atMaxLevel = event.level === MAX_LEVEL;
     setDisplayLevel(event.level);
     setDisplayRank(rank);
     setIsNewRank(event.level === rank.minLevel);
-    setIsMaxLevel(event.level === MAX_LEVEL);
+    setIsMaxLevel(atMaxLevel);
     setVisible(true);
     cardScale.setValue(0);
     cardOpacity.setValue(0);
@@ -52,7 +72,7 @@ export function LevelUpCelebration({ event, onDone }: LevelUpCelebrationProps) {
       Animated.timing(ringOpacity, { toValue: 0, duration: 700, useNativeDriver: true }),
     ]).start(() => {
       Animated.sequence([
-        Animated.delay(650),
+        Animated.delay(atMaxLevel ? MAX_LEVEL_HOLD_MS : HOLD_MS),
         Animated.parallel([
           Animated.timing(cardOpacity, { toValue: 0, duration: 250, useNativeDriver: true }),
           Animated.timing(cardScale, { toValue: 0.8, duration: 250, useNativeDriver: true }),
@@ -64,10 +84,31 @@ export function LevelUpCelebration({ event, onDone }: LevelUpCelebrationProps) {
     });
   }, [event, cardScale, cardOpacity, ringScale, ringOpacity, onDone]);
 
+  function handlePrestigeTap() {
+    const next = getPrestigeInfo(prestige + 1);
+    Alert.alert(
+      `Prestige to ${next.label}?`,
+      'This resets your level back to 1 and starts your XP over - the prestige badge is permanent.',
+      [
+        { text: 'Not yet', style: 'cancel' },
+        {
+          text: 'Prestige',
+          style: 'destructive',
+          onPress: () => {
+            prestigeUp();
+            dismiss();
+          },
+        },
+      ],
+    );
+  }
+
   if (!visible || displayLevel == null) return null;
 
+  const showPrestigeHint = isMaxLevel && canPrestige(displayLevel, prestige);
+
   return (
-    <View pointerEvents="none" style={styles.container}>
+    <View pointerEvents="box-none" style={styles.container}>
       <Animated.View style={[styles.ring, { opacity: ringOpacity, transform: [{ scale: ringScale }] }]} />
       <Animated.View style={[styles.card, { opacity: cardOpacity, transform: [{ scale: cardScale }] }]}>
         <Text style={styles.label}>{isMaxLevel ? 'MAX LEVEL' : isNewRank ? 'RANK UP' : 'LEVEL UP'}</Text>
@@ -77,7 +118,11 @@ export function LevelUpCelebration({ event, onDone }: LevelUpCelebrationProps) {
             {displayRank.icon} {displayRank.name.toUpperCase()}
           </Text>
         )}
-        {isMaxLevel && <Text style={styles.maxHint}>Ready to prestige</Text>}
+        {showPrestigeHint && (
+          <Pressable style={styles.prestigeHint} onPress={handlePrestigeTap} hitSlop={8}>
+            <Text style={styles.prestigeHintText}>Tap to prestige</Text>
+          </Pressable>
+        )}
       </Animated.View>
     </View>
   );
@@ -122,9 +167,17 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 1,
   },
-  maxHint: {
-    color: colors.textSecondary,
+  prestigeHint: {
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: radii.pill,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.gold,
+  },
+  prestigeHintText: {
+    color: colors.gold,
     fontSize: 12,
-    marginTop: 2,
+    fontWeight: '700',
   },
 });
