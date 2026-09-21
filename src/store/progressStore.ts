@@ -15,15 +15,24 @@ function nextStreak(lastActiveDate: string | null, currentStreak: number): numbe
   return lastActiveDate === yesterday ? currentStreak + 1 : 1;
 }
 
+export type AwardEvent = { id: number; amount: number };
+export type LevelUpEvent = { id: number; level: number };
+
+let nextEventId = 1;
+
 type ProgressState = {
   progress: UserProgress;
   level: Level;
   isLoaded: boolean;
-  /** XP amount from the most recent award, for the "+XX XP" toast. Cleared by the UI once shown. */
-  lastAward: number | null;
+  /** Most recent award, for the orb/toast animation. Each award gets a fresh id, even if
+   * the amount repeats, so consumers keyed on it re-trigger every time. Cleared once shown. */
+  lastAward: AwardEvent | null;
+  /** Set only on the award that crosses a level threshold. Cleared once shown. */
+  lastLevelUp: LevelUpEvent | null;
   loadProgress: () => Promise<void>;
   awardXP: (videoId: string, xp: number, watchedSeconds: number) => void;
   clearLastAward: () => void;
+  clearLastLevelUp: () => void;
 };
 
 export const useProgressStore = create<ProgressState>((set, get) => ({
@@ -31,6 +40,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   level: getLevelFromXP(DEFAULT_USER_PROGRESS.totalXP),
   isLoaded: false,
   lastAward: null,
+  lastLevelUp: null,
 
   loadProgress: async () => {
     const progress = await loadUserProgress();
@@ -46,6 +56,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   awardXP: (videoId, xp, watchedSeconds) => {
     if (xp <= 0) return;
     const current = get().progress;
+    const previousLevel = get().level;
     const updated: UserProgress = {
       ...current,
       totalXP: current.totalXP + xp,
@@ -53,9 +64,18 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       totalWatchTime: current.totalWatchTime + watchedSeconds,
       rewardedVideoIds: [...current.rewardedVideoIds, videoId],
     };
-    set({ progress: updated, level: getLevelFromXP(updated.totalXP), lastAward: xp });
+    const newLevel = getLevelFromXP(updated.totalXP);
+    const leveledUp = newLevel.level > previousLevel.level;
+
+    set({
+      progress: updated,
+      level: newLevel,
+      lastAward: { id: nextEventId++, amount: xp },
+      lastLevelUp: leveledUp ? { id: nextEventId++, level: newLevel.level } : get().lastLevelUp,
+    });
     void saveUserProgress(updated);
   },
 
   clearLastAward: () => set({ lastAward: null }),
+  clearLastLevelUp: () => set({ lastLevelUp: null }),
 }));

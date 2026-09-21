@@ -19,7 +19,6 @@ export function useYouTubeShortsBridge(config: XPConfig) {
 
   const awardXP = useProgressStore((state) => state.awardXP);
   const rewardedVideoIds = useProgressStore((state) => state.progress.rewardedVideoIds);
-  const debug = useDebugStore();
 
   if (providerRef.current === null) {
     providerRef.current = new YouTubeVideoProvider();
@@ -33,6 +32,10 @@ export function useYouTubeShortsBridge(config: XPConfig) {
       const parsed = parseWebViewEvent(event.nativeEvent.data);
       if (!parsed) return;
 
+      // Read the debug store imperatively (not via the reactive hook) - handleWebViewMessage
+      // fires on every progress tick, and this component has no UI that depends on debug
+      // state, so subscribing to it here would re-render the whole Shorts screen ~3x/sec.
+      const debug = useDebugStore.getState();
       debug.recordEventReceived();
       providerRef.current!.ingestEvent(parsed);
 
@@ -68,6 +71,5 @@ export function useYouTubeShortsBridge(config: XPConfig) {
     }
 
     return { handleWebViewMessage };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, awardXP]);
 }

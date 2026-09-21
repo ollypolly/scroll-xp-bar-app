@@ -120,79 +120,7 @@ export const YOUTUBE_INJECTED_JAVASCRIPT = `
   document.addEventListener('yt-navigate-finish', tick);
   window.addEventListener('popstate', tick);
   tick();
-
-  // --- XP overlay -----------------------------------------------------------
-
-  function ensureOverlay() {
-    if (document.getElementById('shorts-xp-overlay')) return;
-
-    var style = document.createElement('style');
-    style.textContent =
-      '#shorts-xp-overlay{position:fixed;top:env(safe-area-inset-top,12px);left:12px;right:12px;' +
-      'z-index:2147483647;pointer-events:none;font-family:-apple-system,Roboto,sans-serif;' +
-      'display:flex;align-items:center;gap:8px;background:rgba(15,15,20,0.55);' +
-      '-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-radius:999px;' +
-      'padding:6px 12px;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.25);}' +
-      '#shorts-xp-level{font-size:12px;font-weight:700;letter-spacing:0.5px;white-space:nowrap;}' +
-      '#shorts-xp-bar-track{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,0.25);overflow:hidden;}' +
-      '#shorts-xp-progress{height:100%;width:0%;background:linear-gradient(90deg,#7c3aed,#ec4899);transition:width 300ms ease;}' +
-      '#shorts-xp-text{font-size:11px;opacity:0.85;white-space:nowrap;}' +
-      '#shorts-xp-toast{position:fixed;top:calc(env(safe-area-inset-top,12px) + 44px);right:12px;' +
-      'z-index:2147483647;pointer-events:none;font-family:-apple-system,Roboto,sans-serif;' +
-      'font-size:13px;font-weight:700;color:#fbbf24;opacity:0;transform:translateY(-6px);' +
-      'transition:opacity 200ms ease,transform 200ms ease;}' +
-      '#shorts-xp-toast.visible{opacity:1;transform:translateY(0);}';
-    document.head.appendChild(style);
-
-    var overlay = document.createElement('div');
-    overlay.id = 'shorts-xp-overlay';
-    overlay.innerHTML =
-      '<div id="shorts-xp-level">LV 1</div>' +
-      '<div id="shorts-xp-bar-track"><div id="shorts-xp-progress"></div></div>' +
-      '<div id="shorts-xp-text">0 / 0 XP</div>';
-    document.body.appendChild(overlay);
-
-    var toast = document.createElement('div');
-    toast.id = 'shorts-xp-toast';
-    document.body.appendChild(toast);
-  }
-
-  window.updateShortsXP = function (data) {
-    ensureOverlay();
-    document.getElementById('shorts-xp-level').textContent = 'LV ' + data.level;
-    var span = data.nextLevelXP - data.currentLevelXP;
-    var into = data.currentXP - data.currentLevelXP;
-    var pct = span > 0 ? Math.min(100, Math.max(0, (into / span) * 100)) : 100;
-    document.getElementById('shorts-xp-progress').style.width = pct + '%';
-    document.getElementById('shorts-xp-text').textContent = into + ' / ' + span + ' XP';
-  };
-
-  window.showShortsXPGain = function (amount) {
-    ensureOverlay();
-    var toast = document.getElementById('shorts-xp-toast');
-    toast.textContent = '+' + amount + ' XP';
-    toast.classList.add('visible');
-    clearTimeout(window.__shortsXPToastTimer);
-    window.__shortsXPToastTimer = setTimeout(function () {
-      toast.classList.remove('visible');
-    }, 1200);
-  };
-
-  ensureOverlay();
   true;
 })();
 true;
 `;
-
-export function buildOverlayUpdateScript(data: {
-  level: number;
-  currentXP: number;
-  currentLevelXP: number;
-  nextLevelXP: number;
-}): string {
-  return `window.updateShortsXP && window.updateShortsXP(${JSON.stringify(data)}); true;`;
-}
-
-export function buildXPGainScript(amount: number): string {
-  return `window.showShortsXPGain && window.showShortsXPGain(${amount}); true;`;
-}

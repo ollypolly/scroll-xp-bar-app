@@ -9,15 +9,13 @@ import { useProgressStore } from '../store/progressStore';
 /**
  * Reads directly from the progress store rather than taking currentXP/level as
  * props, so every screen that mounts it (onboarding, debug, shorts) stays in
- * sync without prop drilling.
+ * sync without prop drilling. Styled as a self-contained translucent card so it
+ * reads clearly as an overlay on top of the WebView, not just on a plain screen.
  */
 export function XPBar() {
   const level = useProgressStore((state) => state.level);
-  const lastAward = useProgressStore((state) => state.lastAward);
-  const clearLastAward = useProgressStore((state) => state.clearLastAward);
 
   const progressAnim = useRef(new Animated.Value(0)).current;
-  const toastAnim = useRef(new Animated.Value(0)).current;
   const levelFlashAnim = useRef(new Animated.Value(0)).current;
   const previousLevelRef = useRef(level.level);
 
@@ -41,26 +39,11 @@ export function XPBar() {
     }
   }, [level.level, levelFlashAnim]);
 
-  useEffect(() => {
-    if (lastAward == null) return;
-    toastAnim.setValue(0);
-    Animated.sequence([
-      Animated.timing(toastAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
-      Animated.delay(700),
-      Animated.timing(toastAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
-    ]).start(() => clearLastAward());
-  }, [lastAward, toastAnim, clearLastAward]);
-
   const widthInterpolated = progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
   const headerBackground = levelFlashAnim.interpolate({ inputRange: [0, 1], outputRange: ['#1f1f2e', '#7c3aed'] });
-  const toastTranslateY = toastAnim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] });
-  const toastStyle = { opacity: toastAnim, transform: [{ translateY: toastTranslateY }] };
 
   return (
     <View style={styles.container}>
-      {lastAward != null && (
-        <Animated.Text style={[styles.gainText, toastStyle]}>+{lastAward} XP</Animated.Text>
-      )}
       <Animated.View style={[styles.header, { backgroundColor: headerBackground }]}>
         <Text style={styles.levelText}>LEVEL {level.level}</Text>
       </Animated.View>
@@ -76,14 +59,11 @@ export function XPBar() {
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
     gap: 6,
-  },
-  gainText: {
-    alignSelf: 'flex-end',
-    color: '#fbbf24',
-    fontSize: 13,
-    fontWeight: '700',
+    backgroundColor: 'rgba(15,15,20,0.55)',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   header: {
     alignSelf: 'flex-start',
