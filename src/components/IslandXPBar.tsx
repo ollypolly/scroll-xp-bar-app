@@ -162,7 +162,7 @@ export function IslandXPBar() {
 const styles = StyleSheet.create({
   island: {
     height: ISLAND_HEIGHT,
-    alignSelf: 'center',
+    alignSelf: 'flex-start',
     backgroundColor: colors.island,
     borderRadius: radii.pill,
     borderWidth: StyleSheet.hairlineWidth,

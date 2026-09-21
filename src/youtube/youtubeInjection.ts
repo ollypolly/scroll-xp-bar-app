@@ -12,11 +12,33 @@
  *  - A 350ms poll is a fallback for SPA navigations that don't reliably fire a
  *    detectable DOM event; `yt-navigate-finish`/`popstate` short-circuit it when
  *    they do fire.
+ *
+ * hideYouTubeChrome() is the one exception to "no hard-coded selectors" above - it's
+ * purely cosmetic (a CSS display:none, never read from), so a wrong/stale selector just
+ * means the topbar stays visible rather than breaking anything. `ytm-mobile-topbar-renderer`
+ * is YouTube's mobile-web topbar custom element as of writing; this has NOT been verified
+ * against the live page in this session and may need adjusting once seen on-device.
  */
 export const YOUTUBE_INJECTED_JAVASCRIPT = `
 (function () {
   if (window.__shortsXPInjected) { return true; }
   window.__shortsXPInjected = true;
+
+  function hideYouTubeChrome() {
+    try {
+      var style = document.createElement('style');
+      style.textContent = [
+        'ytm-mobile-topbar-renderer,',
+        'tp-yt-app-toolbar#header,',
+        'ytm-topbar-logo-renderer,',
+        'a[aria-label="YouTube Home"],',
+        '[aria-label="YouTube Home"]',
+        '{ display: none !important; }',
+      ].join(' ');
+      (document.head || document.documentElement).appendChild(style);
+    } catch (e) {}
+  }
+  hideYouTubeChrome();
 
   function post(event) {
     if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {

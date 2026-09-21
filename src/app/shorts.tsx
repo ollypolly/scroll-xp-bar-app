@@ -4,7 +4,6 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { WebView, type WebViewNavigation } from 'react-native-webview';
 
 import { useEffectSounds } from '../audio/useEffectSounds';
-import { DebugPanel } from '../components/DebugPanel';
 import { ISLAND_HEIGHT, IslandXPBar } from '../components/IslandXPBar';
 import { LevelUpCelebration } from '../components/effects/LevelUpCelebration';
 import { type Point, XPOrbBurst } from '../components/effects/XPOrbBurst';
@@ -26,7 +25,6 @@ export default function ShortsScreen() {
   const insets = useSafeAreaInsets();
 
   const [onShortsPage, setOnShortsPage] = useState(true);
-  const [panelOpen, setPanelOpen] = useState(false);
 
   const lastAward = useProgressStore((state) => state.lastAward);
   const clearLastAward = useProgressStore((state) => state.clearLastAward);
@@ -72,12 +70,7 @@ export default function ShortsScreen() {
 
       <View pointerEvents="box-none" style={styles.overlayLayer}>
         <View pointerEvents="box-none" style={[styles.header, { top: insets.top + spacing.md }]}>
-          <View style={styles.islandSlot}>
-            <IslandXPBar />
-          </View>
-          <TouchableOpacity style={styles.gearButton} onPress={() => setPanelOpen(true)}>
-            <Text style={styles.gearButtonText}>{'⚙'}</Text>
-          </TouchableOpacity>
+          <IslandXPBar />
         </View>
 
         {!onShortsPage && (
@@ -93,8 +86,6 @@ export default function ShortsScreen() {
       </View>
 
       <LevelUpCelebration event={lastLevelUp} onDone={clearLastLevelUp} />
-
-      <DebugPanel visible={panelOpen} onClose={() => setPanelOpen(false)} />
     </SafeAreaView>
   );
 }
@@ -114,26 +105,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: spacing.md,
     right: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  islandSlot: {
-    flex: 1,
-  },
-  gearButton: {
-    width: 32,
-    height: 32,
-    borderRadius: radii.pill,
-    backgroundColor: colors.island,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.islandBorder,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gearButtonText: {
-    color: colors.textPrimary,
-    fontSize: 14,
   },
   backButton: {
     position: 'absolute',
