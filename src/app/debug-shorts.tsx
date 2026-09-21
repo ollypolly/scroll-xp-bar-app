@@ -1,28 +1,18 @@
 import { router } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Dimensions,
-  FlatList,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View,
-  type ViewToken,
-} from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Dimensions, FlatList, StyleSheet, Text, TouchableOpacity, View, type ViewToken } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useEffectSounds } from '../audio/useEffectSounds';
+import { DebugPanel } from '../components/DebugPanel';
 import { ISLAND_HEIGHT, IslandXPBar } from '../components/IslandXPBar';
 import { LevelUpCelebration } from '../components/effects/LevelUpCelebration';
 import { type Point, XPOrbBurst } from '../components/effects/XPOrbBurst';
 import { levelUpHaptic, xpGainHaptic } from '../haptics';
-import { canPrestige } from '../xp/badges';
-import { getLevelFromXP, MAX_LEVEL, xpRequiredForLevel } from '../xp/levelSystem';
+import { useDebugStore } from '../store/debugStore';
 import { useProgressStore } from '../store/progressStore';
-import { colors, radii, spacing, typography } from '../theme/tokens';
+import { colors, radii, spacing } from '../theme/tokens';
+import { awardDebugXP, forceDebugLevelUp } from '../xp/debugActions';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const ORB_SPAWN_POINT: Point = { x: SCREEN_WIDTH / 2, y: SCREEN_HEIGHT - 160 };
@@ -37,7 +27,6 @@ const FAKE_CAPTIONS = [
   'ok but the timing on this',
   'sending this to everyone I know',
 ];
-let nextDebugVideoId = 1;
 
 type FakeShort = { id: string; hue: number; handle: string; caption: string; likes: number; comments: number };
 
@@ -64,32 +53,14 @@ function formatCount(value: number): string {
 export default function DebugShortsScreen() {
   const insets = useSafeAreaInsets();
   const { playXPGain, playLevelUp } = useEffectSounds();
-  const awardXP = useProgressStore((state) => state.awardXP);
-  const prestigeUp = useProgressStore((state) => state.prestigeUp);
-  const totalXP = useProgressStore((state) => state.progress.totalXP);
-  const prestige = useProgressStore((state) => state.progress.prestige);
-  const level = useProgressStore((state) => state.level);
   const lastAward = useProgressStore((state) => state.lastAward);
   const clearLastAward = useProgressStore((state) => state.clearLastAward);
   const lastLevelUp = useProgressStore((state) => state.lastLevelUp);
   const clearLastLevelUp = useProgressStore((state) => state.clearLastLevelUp);
 
   const [panelOpen, setPanelOpen] = useState(false);
-  const [xpOnScroll, setXpOnScroll] = useState(false);
-  const [levelUpOnScroll, setLevelUpOnScroll] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
-  const xpOnScrollRef = useRef(xpOnScroll);
-  const levelUpOnScrollRef = useRef(levelUpOnScroll);
-  const lastIndexRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    xpOnScrollRef.current = xpOnScroll;
-  }, [xpOnScroll]);
-
-  useEffect(() => {
-    levelUpOnScrollRef.current = levelUpOnScroll;
-  }, [levelUpOnScroll]);
 
   useEffect(() => {
     if (lastAward == null) return;
@@ -104,24 +75,6 @@ export default function DebugShortsScreen() {
     void playLevelUp();
   }, [lastLevelUp, playLevelUp]);
 
-  const awardRandomXP = useCallback(() => {
-    const amount = 20 + Math.floor(Math.random() * 80);
-    awardXP(`debug-${nextDebugVideoId++}`, amount, 5);
-  }, [awardXP]);
-
-  const forceLevelUp = useCallback(() => {
-    const progress = useProgressStore.getState().progress;
-    const current = getLevelFromXP(progress.totalXP);
-    const needed = xpRequiredForLevel(current.level + 1) - progress.totalXP;
-    awardXP(`debug-${nextDebugVideoId++}`, Math.max(1, needed), 5);
-  }, [awardXP]);
-
-  const forceMaxLevel = useCallback(() => {
-    const progress = useProgressStore.getState().progress;
-    const needed = xpRequiredForLevel(MAX_LEVEL) - progress.totalXP;
-    awardXP(`debug-${nextDebugVideoId++}`, Math.max(1, needed), 5);
-  }, [awardXP]);
-
   const toggleLike = useCallback((id: string) => {
     setLikedIds((current) => {
       const next = new Set(current);
@@ -134,36 +87,39 @@ export default function DebugShortsScreen() {
     });
   }, []);
 
-  // Stable identity (memoized, reads live toggle state from refs) - FlatList warns if
-  // onViewableItemsChanged changes after mount.
-  const onViewableItemsChanged = useCallback(
-    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
-      const item = viewableItems[0];
-      if (item?.index == null || item.index === lastIndexRef.current) return;
-      lastIndexRef.current = item.index;
-      setActiveIndex(item.index);
-      if (xpOnScrollRef.current) awardRandomXP();
-      if (levelUpOnScrollRef.current) forceLevelUp();
-    },
-    [awardRandomXP, forceLevelUp],
-  );
+  // Stable identity (reads live toggle state from the debug store, not component state) -
+  // FlatList warns if onViewableItemsChanged changes after mount.
+  const onViewableItemsChanged = useCallback(({ viewableItems }: { viewableItems: ViewToken[] }) => {
+    const item = viewableItems[0];
+    if (item?.index == null) return;
+    setActiveIndex(item.index);
+    const debug = useDebugStore.getState();
+    if (debug.xpOnScroll) awardDebugXP();
+    if (debug.levelUpOnScroll) forceDebugLevelUp();
+  }, []);
 
   const orbTarget: Point = { x: SCREEN_WIDTH / 2, y: insets.top + spacing.md + ISLAND_HEIGHT / 2 };
   const activeShort = FAKE_SHORTS[activeIndex];
   const activeLiked = likedIds.has(activeShort.id);
+  // The SafeAreaView pads top/bottom, so each "page" is shorter than the full screen -
+  // size cards (and the paging snap interval) to the space actually available to the
+  // FlatList, not the raw screen height, or paging drifts out of alignment.
+  const pageHeight = SCREEN_HEIGHT - insets.top - insets.bottom;
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <FlatList
         data={FAKE_SHORTS}
         keyExtractor={(item) => item.id}
         pagingEnabled
-        snapToInterval={SCREEN_HEIGHT}
+        snapToInterval={pageHeight}
         decelerationRate="fast"
         showsVerticalScrollIndicator={false}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={{ itemVisiblePercentThreshold: 60 }}
-        renderItem={({ item }) => <View style={[styles.card, { backgroundColor: `hsl(${item.hue}, 55%, 18%)` }]} />}
+        renderItem={({ item }) => (
+          <View style={[styles.card, { height: pageHeight, backgroundColor: `hsl(${item.hue}, 55%, 18%)` }]} />
+        )}
       />
 
       <View pointerEvents="box-none" style={styles.overlayLayer}>
@@ -206,51 +162,7 @@ export default function DebugShortsScreen() {
 
       <LevelUpCelebration event={lastLevelUp} onDone={clearLastLevelUp} />
 
-      <Modal visible={panelOpen} transparent animationType="slide" onRequestClose={() => setPanelOpen(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setPanelOpen(false)}>
-          <Pressable style={[styles.panel, { paddingBottom: insets.bottom + spacing.md }]} onPress={() => {}}>
-            <View style={styles.panelHeader}>
-              <Text style={styles.panelTitle}>Debug controls</Text>
-              <TouchableOpacity onPress={() => setPanelOpen(false)}>
-                <Text style={styles.closeButtonText}>Done</Text>
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.panelStat}>{totalXP.toLocaleString()} total XP</Text>
-
-            <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.actionButton} onPress={awardRandomXP}>
-                <Text style={styles.actionButtonText}>+XP</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton} onPress={forceLevelUp}>
-                <Text style={styles.actionButtonText}>Force level up</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.buttonRow}>
-              <TouchableOpacity style={styles.actionButton} onPress={forceMaxLevel}>
-                <Text style={styles.actionButtonText}>Force level 100</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, !canPrestige(level.level, prestige) && styles.actionButtonDisabled]}
-                onPress={prestigeUp}
-                disabled={!canPrestige(level.level, prestige)}
-              >
-                <Text style={styles.actionButtonText}>Prestige</Text>
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.toggleRow}>
-              <Text style={styles.toggleLabel}>XP on scroll</Text>
-              <Switch value={xpOnScroll} onValueChange={setXpOnScroll} />
-            </View>
-            <View style={styles.toggleRow}>
-              <Text style={styles.toggleLabel}>Level up on scroll</Text>
-              <Switch value={levelUpOnScroll} onValueChange={setLevelUpOnScroll} />
-            </View>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <DebugPanel visible={panelOpen} onClose={() => setPanelOpen(false)} />
     </SafeAreaView>
   );
 }
@@ -262,7 +174,6 @@ const styles = StyleSheet.create({
   },
   card: {
     width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
   },
   overlayLayer: {
     ...StyleSheet.absoluteFill,
@@ -327,66 +238,5 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 11,
     fontWeight: '600',
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: colors.scrim,
-    justifyContent: 'flex-end',
-  },
-  panel: {
-    backgroundColor: colors.surface,
-    borderTopLeftRadius: radii.lg,
-    borderTopRightRadius: radii.lg,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    gap: spacing.sm + 2,
-  },
-  panelHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  panelTitle: {
-    ...typography.heading,
-    color: colors.textPrimary,
-  },
-  closeButtonText: {
-    color: colors.accent,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  panelStat: {
-    color: colors.textSecondary,
-    fontSize: 13,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  actionButton: {
-    flex: 1,
-    backgroundColor: colors.accent,
-    borderRadius: radii.md,
-    paddingVertical: spacing.sm + 2,
-    alignItems: 'center',
-  },
-  actionButtonDisabled: {
-    opacity: 0.4,
-  },
-  actionButtonText: {
-    color: colors.textPrimary,
-    fontWeight: '700',
-    fontSize: 13,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  toggleLabel: {
-    color: colors.textPrimary,
-    fontSize: 14,
   },
 });

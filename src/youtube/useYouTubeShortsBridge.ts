@@ -2,6 +2,7 @@ import { useMemo, useRef } from 'react';
 import type { WebViewMessageEvent } from 'react-native-webview';
 
 import { calculateWatchPercentage } from '../xp/xpEngine';
+import { awardDebugXP, forceDebugLevelUp } from '../xp/debugActions';
 import type { XPConfig } from '../xp/xpConfig';
 import { useDebugStore } from '../store/debugStore';
 import { useProgressStore } from '../store/progressStore';
@@ -50,6 +51,10 @@ export function useYouTubeShortsBridge(config: XPConfig) {
       if (parsed.type === 'VIDEO_CHANGED') {
         debug.recordVideoChange();
         debug.logEvent(`VIDEO_CHANGED ${parsed.previousVideoId ?? '(none)'} -> ${parsed.videoId}`);
+        // Debug-only testing aids: award/level-up on every real scroll, regardless of
+        // watch time, so the UI can be exercised without waiting to watch full Shorts.
+        if (debug.xpOnScroll) awardDebugXP();
+        if (debug.levelUpOnScroll) forceDebugLevelUp();
       } else if (parsed.type === 'VIDEO_STARTED') {
         debug.logEvent(`VIDEO_STARTED ${parsed.videoId}`);
       }

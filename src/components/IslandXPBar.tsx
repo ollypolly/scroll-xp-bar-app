@@ -1,8 +1,9 @@
 /* eslint-disable react-hooks/refs -- Animated.Values held in refs are meant to be read during
  * render (that's how RN's Animated API drives interpolation); this predates and is unrelated
  * to the React Compiler assumptions this rule otherwise guards. */
+import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, type LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
+import { Animated, type LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getPrestigeInfo, getRankForLevel } from '../xp/badges';
 import { useProgressStore } from '../store/progressStore';
@@ -37,6 +38,7 @@ export function IslandXPBar() {
   const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAwardIdRef = useRef<number | null>(null);
   const lastLevelUpIdRef = useRef<number | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // The collapsed pill hugs its content instead of using a fixed width, so there's no
   // dead space after a short XP amount (e.g. "120 XP" vs "999.9K XP").
@@ -63,11 +65,24 @@ export function IslandXPBar() {
 
   const expand = useCallback(() => {
     if (collapseTimer.current) clearTimeout(collapseTimer.current);
+    setIsExpanded(true);
     Animated.spring(expandAnim, { toValue: 1, useNativeDriver: false, friction: 9, tension: 90 }).start();
     collapseTimer.current = setTimeout(() => {
+      setIsExpanded(false);
       Animated.spring(expandAnim, { toValue: 0, useNativeDriver: false, friction: 9, tension: 90 }).start();
     }, HOLD_MS);
   }, [expandAnim]);
+
+  // First tap manually opens the pill (same as an XP-award auto-expand); a second tap
+  // while it's already open reads as "I want more detail" and goes to the full profile.
+  const handlePress = useCallback(() => {
+    if (isExpanded) {
+      if (collapseTimer.current) clearTimeout(collapseTimer.current);
+      router.push('/profile');
+    } else {
+      expand();
+    }
+  }, [isExpanded, expand]);
 
   useEffect(() => {
     if (lastAward == null || lastAward.id === lastAwardIdRef.current) return;
@@ -101,38 +116,40 @@ export function IslandXPBar() {
   const progressWidth = progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 
   return (
-    <Animated.View style={[styles.island, shadow.island, { width }]}>
-      <Animated.View style={[styles.badge, { backgroundColor: badgeBackground }]}>
-        <Text style={styles.badgeText}>{level.level}</Text>
-      </Animated.View>
-
-      {hasPrestige && (
-        <View style={[styles.prestigeChip, { borderColor: prestigeInfo.color }]}>
-          <Text style={[styles.prestigeChipText, { color: prestigeInfo.color }]}>
-            {prestigeInfo.label.replace('Prestige ', '')}
-          </Text>
-        </View>
-      )}
-
-      <View style={styles.contentStack}>
-        <Animated.View style={[styles.collapsedContent, { opacity: collapsedOpacity }]} pointerEvents="none">
-          <Text style={styles.compactXpText} onLayout={handleXpTextLayout}>
-            {formatCompactNumber(totalXP)} XP
-          </Text>
+    <Pressable onPress={handlePress}>
+      <Animated.View style={[styles.island, shadow.island, { width }]}>
+        <Animated.View style={[styles.badge, { backgroundColor: badgeBackground }]}>
+          <Text style={styles.badgeText}>{level.level}</Text>
         </Animated.View>
 
-        <Animated.View style={[styles.expandedContent, { opacity: expandedOpacity }]} pointerEvents="none">
-          <View style={styles.track}>
-            <Animated.View style={[styles.progress, { width: progressWidth, backgroundColor: rank.color }]} />
+        {hasPrestige && (
+          <View style={[styles.prestigeChip, { borderColor: prestigeInfo.color }]}>
+            <Text style={[styles.prestigeChipText, { color: prestigeInfo.color }]}>
+              {prestigeInfo.label.replace('Prestige ', '')}
+            </Text>
           </View>
-          <Text style={styles.xpText}>
-            {level.isMaxLevel
-              ? 'MAX LEVEL'
-              : `${level.xpIntoLevel.toLocaleString()} / ${level.xpForNextLevel.toLocaleString()} XP`}
-          </Text>
-        </Animated.View>
-      </View>
-    </Animated.View>
+        )}
+
+        <View style={styles.contentStack}>
+          <Animated.View style={[styles.collapsedContent, { opacity: collapsedOpacity }]} pointerEvents="none">
+            <Text style={styles.compactXpText} onLayout={handleXpTextLayout}>
+              {formatCompactNumber(totalXP)} XP
+            </Text>
+          </Animated.View>
+
+          <Animated.View style={[styles.expandedContent, { opacity: expandedOpacity }]} pointerEvents="none">
+            <View style={styles.track}>
+              <Animated.View style={[styles.progress, { width: progressWidth, backgroundColor: rank.color }]} />
+            </View>
+            <Text style={styles.xpText}>
+              {level.isMaxLevel
+                ? 'MAX LEVEL'
+                : `${level.xpIntoLevel.toLocaleString()} / ${level.xpForNextLevel.toLocaleString()} XP`}
+            </Text>
+          </Animated.View>
+        </View>
+      </Animated.View>
+    </Pressable>
   );
 }
 

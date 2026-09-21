@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 
 export type DebugLogEntry = {
@@ -6,7 +7,19 @@ export type DebugLogEntry = {
   message: string;
 };
 
-type DebugState = {
+const SETTINGS_STORAGE_KEY = '@shorts-xp/debug-settings';
+
+type DebugSettings = {
+  xpOnScroll: boolean;
+  levelUpOnScroll: boolean;
+};
+
+const DEFAULT_DEBUG_SETTINGS: DebugSettings = {
+  xpOnScroll: false,
+  levelUpOnScroll: false,
+};
+
+type DebugState = DebugSettings & {
   currentVideoId: string | null;
   duration: number | null;
   position: number | null;
@@ -20,12 +33,22 @@ type DebugState = {
   recordVideoChange: () => void;
   recordEventReceived: () => void;
   recordXPAward: (xp: number) => void;
+  /** Loads persisted debug settings (XP-on-scroll etc.) so they carry over between app
+   * launches and are shared between the real Shorts screen and the simulator. */
+  loadDebugSettings: () => Promise<void>;
+  setXpOnScroll: (value: boolean) => void;
+  setLevelUpOnScroll: (value: boolean) => void;
 };
 
 const MAX_LOG_ENTRIES = 200;
 let nextLogId = 1;
 
-export const useDebugStore = create<DebugState>((set) => ({
+function saveDebugSettings(settings: DebugSettings): void {
+  void AsyncStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+}
+
+export const useDebugStore = create<DebugState>((set, get) => ({
+  ...DEFAULT_DEBUG_SETTINGS,
   currentVideoId: null,
   duration: null,
   position: null,
@@ -46,4 +69,23 @@ export const useDebugStore = create<DebugState>((set) => ({
   recordVideoChange: () => set((state) => ({ videoChangeCount: state.videoChangeCount + 1 })),
   recordEventReceived: () => set((state) => ({ eventsReceivedCount: state.eventsReceivedCount + 1 })),
   recordXPAward: (xp) => set({ lastXPAward: xp }),
+
+  loadDebugSettings: async () => {
+    try {
+      const raw = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (raw) set({ ...DEFAULT_DEBUG_SETTINGS, ...JSON.parse(raw) });
+    } catch {
+      // Keep defaults if storage is unavailable/corrupted.
+    }
+  },
+
+  setXpOnScroll: (value) => {
+    set({ xpOnScroll: value });
+    saveDebugSettings({ xpOnScroll: value, levelUpOnScroll: get().levelUpOnScroll });
+  },
+
+  setLevelUpOnScroll: (value) => {
+    set({ levelUpOnScroll: value });
+    saveDebugSettings({ xpOnScroll: get().xpOnScroll, levelUpOnScroll: value });
+  },
 }));
