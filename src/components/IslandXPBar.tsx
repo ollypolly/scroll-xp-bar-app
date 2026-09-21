@@ -122,7 +122,7 @@ export function IslandXPBar() {
   const progressWidth = progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 
   return (
-    <Pressable onPress={handlePress}>
+    <Pressable onPress={handlePress} style={styles.pressable}>
       <Animated.View style={[styles.island, shadow.island, { width }]}>
         <Animated.View style={[styles.badge, { backgroundColor: badgeBackground }]}>
           <Text style={styles.badgeText}>{level.level}</Text>
@@ -160,6 +160,9 @@ export function IslandXPBar() {
 }
 
 const styles = StyleSheet.create({
+  pressable: {
+    alignSelf: 'flex-start',
+  },
   island: {
     height: ISLAND_HEIGHT,
     alignSelf: 'flex-start',
