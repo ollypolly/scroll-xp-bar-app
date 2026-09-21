@@ -1,13 +1,31 @@
 import { router } from 'expo-router';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { XPBar } from '../components/XPBar';
 import { useProgressStore } from '../store/progressStore';
 import { colors, radii, spacing, typography } from '../theme/tokens';
+import { canPrestige, getPrestigeInfo } from '../xp/badges';
 
 export default function OnboardingScreen() {
   const isLoaded = useProgressStore((state) => state.isLoaded);
+  const level = useProgressStore((state) => state.level);
+  const prestige = useProgressStore((state) => state.progress.prestige);
+  const prestigeUp = useProgressStore((state) => state.prestigeUp);
+
+  const eligibleForPrestige = isLoaded && canPrestige(level.level, prestige);
+
+  function handlePrestige() {
+    const next = getPrestigeInfo(prestige + 1);
+    Alert.alert(
+      `Prestige to ${next.label}?`,
+      'This resets your level back to 1 and starts your XP over - the prestige badge is permanent.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Prestige', style: 'destructive', onPress: prestigeUp },
+      ],
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -28,6 +46,12 @@ export default function OnboardingScreen() {
         </Text>
 
         {isLoaded ? <XPBar /> : null}
+
+        {eligibleForPrestige && (
+          <TouchableOpacity style={styles.prestigeButton} onPress={handlePrestige}>
+            <Text style={styles.prestigeButtonText}>Prestige</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity style={styles.button} onPress={() => router.push('/shorts')}>
           <Text style={styles.buttonText}>Start scrolling</Text>
@@ -93,5 +117,19 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
     fontSize: 13,
     textAlign: 'center',
+  },
+  prestigeButton: {
+    backgroundColor: colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.gold,
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm + 2,
+    alignItems: 'center',
+  },
+  prestigeButtonText: {
+    color: colors.gold,
+    fontSize: 14,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
 });

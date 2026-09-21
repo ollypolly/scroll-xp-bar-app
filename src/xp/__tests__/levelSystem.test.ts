@@ -1,4 +1,4 @@
-import { DEFAULT_LEVEL_CONFIG, getLevelFromXP, xpRequiredForLevel } from '../levelSystem';
+import { DEFAULT_LEVEL_CONFIG, getLevelFromXP, MAX_LEVEL, xpRequiredForLevel } from '../levelSystem';
 import { DEFAULT_XP_CONFIG } from '../xpConfig';
 
 describe('xpRequiredForLevel', () => {
@@ -58,5 +58,17 @@ describe('getLevelFromXP', () => {
     const level = getLevelFromXP(-100);
     expect(level.level).toBe(1);
     expect(level.xpIntoLevel).toBe(0);
+  });
+
+  it('caps at the max level no matter how much XP is earned', () => {
+    const level = getLevelFromXP(xpRequiredForLevel(MAX_LEVEL) + 1_000_000);
+    expect(level.level).toBe(MAX_LEVEL);
+    expect(level.isMaxLevel).toBe(true);
+    expect(level.xpForNextLevel).toBe(0);
+  });
+
+  it('is not at max level below the cap', () => {
+    const level = getLevelFromXP(500);
+    expect(level.isMaxLevel).toBe(false);
   });
 });

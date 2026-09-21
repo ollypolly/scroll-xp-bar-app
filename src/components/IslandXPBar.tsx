@@ -1,13 +1,16 @@
 /* eslint-disable react-hooks/refs -- Animated.Values held in refs are meant to be read during
  * render (that's how RN's Animated API drives interpolation); this predates and is unrelated
  * to the React Compiler assumptions this rule otherwise guards. */
-import { useCallback, useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Animated, type LayoutChangeEvent, StyleSheet, Text, View } from 'react-native';
 
+import { getPrestigeInfo, getRankForLevel } from '../xp/badges';
 import { useProgressStore } from '../store/progressStore';
 import { colors, formatCompactNumber, radii, shadow, spacing } from '../theme/tokens';
 
-const COLLAPSED_WIDTH = 110;
+const BADGE_SIZE = 24;
+const PRESTIGE_CHIP_WIDTH = 28;
+const MIN_COLLAPSED_WIDTH = 80;
 const EXPANDED_WIDTH = 250;
 export const ISLAND_HEIGHT = 40;
 const HOLD_MS = 1800;
@@ -21,8 +24,12 @@ const HOLD_MS = 1800;
 export function IslandXPBar() {
   const level = useProgressStore((state) => state.level);
   const totalXP = useProgressStore((state) => state.progress.totalXP);
+  const prestige = useProgressStore((state) => state.progress.prestige);
   const lastAward = useProgressStore((state) => state.lastAward);
   const lastLevelUp = useProgressStore((state) => state.lastLevelUp);
+
+  const rank = getRankForLevel(level.level);
+  const prestigeInfo = getPrestigeInfo(prestige);
 
   const expandAnim = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -30,6 +37,13 @@ export function IslandXPBar() {
   const collapseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastAwardIdRef = useRef<number | null>(null);
   const lastLevelUpIdRef = useRef<number | null>(null);
+
+  // The collapsed pill hugs its content instead of using a fixed width, so there's no
+  // dead space after a short XP amount (e.g. "120 XP" vs "999.9K XP").
+  const [xpTextWidth, setXpTextWidth] = useState(40);
+  const handleXpTextLayout = useCallback((event: LayoutChangeEvent) => {
+    setXpTextWidth(event.nativeEvent.layout.width);
+  }, []);
 
   const fraction = level.xpForNextLevel > 0 ? level.xpIntoLevel / level.xpForNextLevel : 1;
 
@@ -71,10 +85,19 @@ export function IslandXPBar() {
     ]).start();
   }, [lastLevelUp, expand, flashAnim]);
 
-  const width = expandAnim.interpolate({ inputRange: [0, 1], outputRange: [COLLAPSED_WIDTH, EXPANDED_WIDTH] });
+  const hasPrestige = prestige > 0;
+  const collapsedWidth = Math.max(
+    MIN_COLLAPSED_WIDTH,
+    spacing.sm * 2 +
+      BADGE_SIZE +
+      spacing.sm +
+      xpTextWidth +
+      (hasPrestige ? PRESTIGE_CHIP_WIDTH + spacing.xs : 0),
+  );
+  const width = expandAnim.interpolate({ inputRange: [0, 1], outputRange: [collapsedWidth, EXPANDED_WIDTH] });
   const collapsedOpacity = expandAnim.interpolate({ inputRange: [0, 0.35, 1], outputRange: [1, 0, 0] });
   const expandedOpacity = expandAnim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 0, 1] });
-  const badgeBackground = flashAnim.interpolate({ inputRange: [0, 1], outputRange: [colors.accent, colors.gold] });
+  const badgeBackground = flashAnim.interpolate({ inputRange: [0, 1], outputRange: [rank.color, colors.gold] });
   const progressWidth = progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 
   return (
@@ -83,17 +106,29 @@ export function IslandXPBar() {
         <Text style={styles.badgeText}>{level.level}</Text>
       </Animated.View>
 
+      {hasPrestige && (
+        <View style={[styles.prestigeChip, { borderColor: prestigeInfo.color }]}>
+          <Text style={[styles.prestigeChipText, { color: prestigeInfo.color }]}>
+            {prestigeInfo.label.replace('Prestige ', '')}
+          </Text>
+        </View>
+      )}
+
       <View style={styles.contentStack}>
         <Animated.View style={[styles.collapsedContent, { opacity: collapsedOpacity }]} pointerEvents="none">
-          <Text style={styles.compactXpText}>{formatCompactNumber(totalXP)} XP</Text>
+          <Text style={styles.compactXpText} onLayout={handleXpTextLayout}>
+            {formatCompactNumber(totalXP)} XP
+          </Text>
         </Animated.View>
 
         <Animated.View style={[styles.expandedContent, { opacity: expandedOpacity }]} pointerEvents="none">
           <View style={styles.track}>
-            <Animated.View style={[styles.progress, { width: progressWidth }]} />
+            <Animated.View style={[styles.progress, { width: progressWidth, backgroundColor: rank.color }]} />
           </View>
           <Text style={styles.xpText}>
-            {level.xpIntoLevel.toLocaleString()} / {level.xpForNextLevel.toLocaleString()} XP
+            {level.isMaxLevel
+              ? 'MAX LEVEL'
+              : `${level.xpIntoLevel.toLocaleString()} / ${level.xpForNextLevel.toLocaleString()} XP`}
           </Text>
         </Animated.View>
       </View>
@@ -123,8 +158,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   badgeText: {
-    color: colors.textPrimary,
+    color: '#171717',
     fontSize: 11,
+    fontWeight: '800',
+  },
+  prestigeChip: {
+    height: 18,
+    paddingHorizontal: 5,
+    borderRadius: radii.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  prestigeChipText: {
+    fontSize: 9,
     fontWeight: '800',
   },
   contentStack: {
@@ -137,6 +184,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   compactXpText: {
+    alignSelf: 'flex-start',
     color: colors.textSecondary,
     fontSize: 12,
     fontWeight: '600',

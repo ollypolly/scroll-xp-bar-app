@@ -5,6 +5,8 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import type { LevelUpEvent } from '../../store/progressStore';
 import { colors, radii, spacing } from '../../theme/tokens';
+import { getRankForLevel, type RankTier } from '../../xp/badges';
+import { MAX_LEVEL } from '../../xp/levelSystem';
 
 type LevelUpCelebrationProps = {
   event: LevelUpEvent | null;
@@ -12,10 +14,14 @@ type LevelUpCelebrationProps = {
 };
 
 /** Full-screen celebratory flourish for crossing a level threshold: an expanding ring
- * behind a card that pops in with a spring, holds, then fades out. */
+ * behind a card that pops in with a spring, holds, then fades out. Calls out a rank
+ * change or the level cap specifically, since those are the more significant crossings. */
 export function LevelUpCelebration({ event, onDone }: LevelUpCelebrationProps) {
   const [visible, setVisible] = useState(false);
   const [displayLevel, setDisplayLevel] = useState<number | null>(null);
+  const [displayRank, setDisplayRank] = useState<RankTier | null>(null);
+  const [isNewRank, setIsNewRank] = useState(false);
+  const [isMaxLevel, setIsMaxLevel] = useState(false);
 
   const cardScale = useRef(new Animated.Value(0)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
@@ -28,7 +34,11 @@ export function LevelUpCelebration({ event, onDone }: LevelUpCelebrationProps) {
     if (!event || event.id === lastEventIdRef.current) return;
     lastEventIdRef.current = event.id;
 
+    const rank = getRankForLevel(event.level);
     setDisplayLevel(event.level);
+    setDisplayRank(rank);
+    setIsNewRank(event.level === rank.minLevel);
+    setIsMaxLevel(event.level === MAX_LEVEL);
     setVisible(true);
     cardScale.setValue(0);
     cardOpacity.setValue(0);
@@ -60,8 +70,14 @@ export function LevelUpCelebration({ event, onDone }: LevelUpCelebrationProps) {
     <View pointerEvents="none" style={styles.container}>
       <Animated.View style={[styles.ring, { opacity: ringOpacity, transform: [{ scale: ringScale }] }]} />
       <Animated.View style={[styles.card, { opacity: cardOpacity, transform: [{ scale: cardScale }] }]}>
-        <Text style={styles.label}>LEVEL UP</Text>
+        <Text style={styles.label}>{isMaxLevel ? 'MAX LEVEL' : isNewRank ? 'RANK UP' : 'LEVEL UP'}</Text>
         <Text style={styles.level}>{displayLevel}</Text>
+        {displayRank && (
+          <Text style={[styles.rankName, { color: displayRank.color }]}>
+            {displayRank.icon} {displayRank.name.toUpperCase()}
+          </Text>
+        )}
+        {isMaxLevel && <Text style={styles.maxHint}>Ready to prestige</Text>}
       </Animated.View>
     </View>
   );
@@ -100,5 +116,15 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: 40,
     fontWeight: '900',
+  },
+  rankName: {
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+  maxHint: {
+    color: colors.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
   },
 });

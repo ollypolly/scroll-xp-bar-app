@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import { canPrestige } from '../xp/badges';
 import { getLevelFromXP, type Level } from '../xp/levelSystem';
 import { DEFAULT_USER_PROGRESS, loadUserProgress, saveUserProgress, type UserProgress } from '../storage/persistence';
 
@@ -31,6 +32,9 @@ type ProgressState = {
   lastLevelUp: LevelUpEvent | null;
   loadProgress: () => Promise<void>;
   awardXP: (videoId: string, xp: number, watchedSeconds: number) => void;
+  /** Resets level/XP back to 1 in exchange for the next prestige badge. No-op if not
+   * eligible (must be at the level cap with prestiges remaining). */
+  prestigeUp: () => void;
   clearLastAward: () => void;
   clearLastLevelUp: () => void;
 };
@@ -73,6 +77,16 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       lastAward: { id: nextEventId++, amount: xp },
       lastLevelUp: leveledUp ? { id: nextEventId++, level: newLevel.level } : get().lastLevelUp,
     });
+    void saveUserProgress(updated);
+  },
+
+  prestigeUp: () => {
+    const current = get().progress;
+    const level = get().level;
+    if (!canPrestige(level.level, current.prestige)) return;
+
+    const updated: UserProgress = { ...current, totalXP: 0, prestige: current.prestige + 1 };
+    set({ progress: updated, level: getLevelFromXP(updated.totalXP) });
     void saveUserProgress(updated);
   },
 

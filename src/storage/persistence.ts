@@ -7,6 +7,8 @@ export type UserProgress = {
   currentStreak: number;
   lastActiveDate: string | null;
   rewardedVideoIds: string[];
+  /** Number of times the level-100 cap has been reset for a new badge tier (0-10). */
+  prestige: number;
 };
 
 export const DEFAULT_USER_PROGRESS: UserProgress = {
@@ -16,6 +18,7 @@ export const DEFAULT_USER_PROGRESS: UserProgress = {
   currentStreak: 0,
   lastActiveDate: null,
   rewardedVideoIds: [],
+  prestige: 0,
 };
 
 const STORAGE_KEY = '@shorts-xp/user-progress';

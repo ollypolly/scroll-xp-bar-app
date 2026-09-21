@@ -17,6 +17,7 @@ export const colors = {
   accent: '#8b5cf6',
   accentStrong: '#7c3aed',
   gold: '#fbbf24',
+  like: '#ff375f',
 
   island: '#050505',
   islandBorder: 'rgba(255,255,255,0.14)',

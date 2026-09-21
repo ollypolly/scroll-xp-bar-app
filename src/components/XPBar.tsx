@@ -4,6 +4,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
+import { getPrestigeInfo, getRankForLevel } from '../xp/badges';
 import { useProgressStore } from '../store/progressStore';
 import { colors, radii, spacing } from '../theme/tokens';
 
@@ -14,6 +15,10 @@ import { colors, radii, spacing } from '../theme/tokens';
  */
 export function XPBar() {
   const level = useProgressStore((state) => state.level);
+  const prestige = useProgressStore((state) => state.progress.prestige);
+
+  const rank = getRankForLevel(level.level);
+  const prestigeInfo = getPrestigeInfo(prestige);
 
   const progressAnim = useRef(new Animated.Value(0)).current;
   const levelFlashAnim = useRef(new Animated.Value(0)).current;
@@ -40,18 +45,27 @@ export function XPBar() {
   }, [level.level, levelFlashAnim]);
 
   const widthInterpolated = progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
-  const headerBackground = levelFlashAnim.interpolate({ inputRange: [0, 1], outputRange: [colors.accentStrong, colors.gold] });
+  const headerBackground = levelFlashAnim.interpolate({ inputRange: [0, 1], outputRange: [rank.color, colors.gold] });
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.header, { backgroundColor: headerBackground }]}>
-        <Text style={styles.levelText}>LEVEL {level.level}</Text>
-      </Animated.View>
+      <View style={styles.rankRow}>
+        <Animated.View style={[styles.header, { backgroundColor: headerBackground }]}>
+          <Text style={styles.levelText}>
+            {rank.icon} {rank.name.toUpperCase()} · LV {level.level}
+          </Text>
+        </Animated.View>
+        {prestige > 0 && (
+          <Text style={[styles.prestigeText, { color: prestigeInfo.color }]}>{prestigeInfo.label}</Text>
+        )}
+      </View>
       <View style={styles.track}>
-        <Animated.View style={[styles.progress, { width: widthInterpolated }]} />
+        <Animated.View style={[styles.progress, { width: widthInterpolated, backgroundColor: rank.color }]} />
       </View>
       <Text style={styles.xpText}>
-        {level.xpIntoLevel.toLocaleString()} / {level.xpForNextLevel.toLocaleString()} XP
+        {level.isMaxLevel
+          ? 'MAX LEVEL — ready to prestige'
+          : `${level.xpIntoLevel.toLocaleString()} / ${level.xpForNextLevel.toLocaleString()} XP`}
       </Text>
     </View>
   );
@@ -67,6 +81,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 2,
   },
+  rankRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   header: {
     alignSelf: 'flex-start',
     borderRadius: radii.pill,
@@ -74,10 +93,15 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   levelText: {
-    color: colors.textPrimary,
+    color: '#171717',
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.5,
+  },
+  prestigeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.4,
   },
   track: {
     height: 8,

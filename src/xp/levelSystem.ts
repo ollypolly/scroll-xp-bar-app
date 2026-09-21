@@ -17,6 +17,9 @@ export const DEFAULT_LEVEL_CONFIG: LevelConfig = {
   scale: 3,
 };
 
+/** Levels cap at 100 - reaching it is what unlocks prestiging back to level 1. */
+export const MAX_LEVEL = 100;
+
 export type Level = {
   level: number;
   /** Total XP required to have reached the current level. */
@@ -27,6 +30,7 @@ export type Level = {
   xpIntoLevel: number;
   /** XP needed to go from the current level to the next. */
   xpForNextLevel: number;
+  isMaxLevel: boolean;
 };
 
 export function xpRequiredForLevel(level: number, config: LevelConfig = DEFAULT_LEVEL_CONFIG): number {
@@ -41,12 +45,13 @@ export function xpRequiredForLevel(level: number, config: LevelConfig = DEFAULT_
 export function getLevelFromXP(totalXP: number, config: LevelConfig = DEFAULT_LEVEL_CONFIG): Level {
   const safeXP = Math.max(0, totalXP);
   let level = 1;
-  while (xpRequiredForLevel(level + 1, config) <= safeXP) {
+  while (level < MAX_LEVEL && xpRequiredForLevel(level + 1, config) <= safeXP) {
     level += 1;
   }
 
+  const isMaxLevel = level >= MAX_LEVEL;
   const currentLevelXP = xpRequiredForLevel(level, config);
-  const nextLevelXP = xpRequiredForLevel(level + 1, config);
+  const nextLevelXP = isMaxLevel ? currentLevelXP : xpRequiredForLevel(level + 1, config);
 
   return {
     level,
@@ -54,5 +59,6 @@ export function getLevelFromXP(totalXP: number, config: LevelConfig = DEFAULT_LE
     nextLevelXP,
     xpIntoLevel: safeXP - currentLevelXP,
     xpForNextLevel: nextLevelXP - currentLevelXP,
+    isMaxLevel,
   };
 }
