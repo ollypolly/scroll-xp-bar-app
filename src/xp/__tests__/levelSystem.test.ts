@@ -19,7 +19,8 @@ describe('xpRequiredForLevel', () => {
   });
 
   it('only takes a couple of fully-watched Shorts to reach level 2', () => {
-    expect(xpRequiredForLevel(2)).toBeLessThanOrEqual(DEFAULT_XP_CONFIG.maxXPPerShort * 3);
+    const typicalShortXP = DEFAULT_XP_CONFIG.xpPerSecond * 50; // ~50s, a typical Short length
+    expect(xpRequiredForLevel(2)).toBeLessThanOrEqual(typicalShortXP * 3);
   });
 
   it('respects a custom config', () => {

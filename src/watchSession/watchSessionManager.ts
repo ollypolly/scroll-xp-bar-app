@@ -128,7 +128,7 @@ export class WatchSessionTracker {
     }
 
     const watchPercentage = calculateWatchPercentage(session.maxPlaybackPosition, session.duration);
-    const xpAwarded = calculateShortXP(watchPercentage, config);
+    const xpAwarded = calculateShortXP(session.maxPlaybackPosition, session.duration, config);
     if (xpAwarded > 0) this.rewardedVideoIds.add(videoId);
 
     return {

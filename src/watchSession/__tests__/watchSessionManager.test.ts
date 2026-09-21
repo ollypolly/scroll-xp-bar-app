@@ -1,7 +1,7 @@
 import { DEFAULT_XP_CONFIG } from '../../xp/xpConfig';
 import { WatchSessionTracker } from '../watchSessionManager';
 
-const config = DEFAULT_XP_CONFIG; // minimumWatchPercentage: 20, maxXPPerShort: 100
+const config = DEFAULT_XP_CONFIG; // minimumWatchPercentage: 20, xpPerSecond: 2
 
 describe('WatchSessionTracker', () => {
   it('awards no XP for the very first VIDEO_STARTED (nothing to finish yet)', () => {
@@ -20,7 +20,7 @@ describe('WatchSessionTracker', () => {
       config,
     );
 
-    expect(result).toMatchObject({ videoId: 'a', watchPercentage: 50, xpAwarded: 50 });
+    expect(result).toMatchObject({ videoId: 'a', watchPercentage: 50, xpAwarded: 60 }); // 30s * 2 XP/s
   });
 
   it('awards 0 XP when below the minimum watch percentage', () => {
@@ -41,7 +41,7 @@ describe('WatchSessionTracker', () => {
     tracker.handleEvent({ type: 'VIDEO_STARTED', videoId: 'a', duration: 60 }, config);
     const result = tracker.handleEvent({ type: 'VIDEO_ENDED', videoId: 'a', position: 60, duration: 60 }, config);
 
-    expect(result).toMatchObject({ videoId: 'a', watchPercentage: 100, xpAwarded: 100 });
+    expect(result).toMatchObject({ videoId: 'a', watchPercentage: 100, xpAwarded: 120 }); // 60s * 2 XP/s
   });
 
   it('uses max playback position, not elapsed time, so pause/resume cannot inflate XP', () => {
@@ -69,7 +69,7 @@ describe('WatchSessionTracker', () => {
       { type: 'VIDEO_CHANGED', previousVideoId: 'a', videoId: 'b', duration: 60 },
       config,
     );
-    expect(first?.xpAwarded).toBe(100);
+    expect(first?.xpAwarded).toBe(120);
 
     // navigate back to "a" and finish it again
     tracker.handleEvent({ type: 'VIDEO_PROGRESS', videoId: 'b', position: 60, duration: 60 }, config);
@@ -77,7 +77,7 @@ describe('WatchSessionTracker', () => {
       { type: 'VIDEO_CHANGED', previousVideoId: 'b', videoId: 'a', duration: 60 },
       config,
     );
-    expect(backToA?.xpAwarded).toBe(100); // "b" finishing for the first time
+    expect(backToA?.xpAwarded).toBe(120); // "b" finishing for the first time
 
     tracker.handleEvent({ type: 'VIDEO_PROGRESS', videoId: 'a', position: 60, duration: 60 }, config);
     const secondTimeOnA = tracker.handleEvent(

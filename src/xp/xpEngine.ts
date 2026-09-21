@@ -12,11 +12,13 @@ export function calculateWatchPercentage(position: number, duration: number): nu
 }
 
 /**
- * XP for a single Short: 0 below the configured minimum watch percentage,
- * otherwise maxXPPerShort * watchPercentage / 100, rounded to the nearest integer.
+ * XP for a single Short: 0 below the configured minimum watch percentage, otherwise
+ * xpPerSecond * seconds reached (clamped to duration) - proportional to actual watch
+ * time, so a longer Short fully watched earns more than a shorter one fully watched.
  */
-export function calculateShortXP(watchPercentage: number, config: XPConfig): number {
-  const clamped = Math.min(100, Math.max(0, watchPercentage));
-  if (clamped < config.minimumWatchPercentage) return 0;
-  return Math.round((config.maxXPPerShort * clamped) / 100);
+export function calculateShortXP(position: number, duration: number, config: XPConfig): number {
+  const watchPercentage = calculateWatchPercentage(position, duration);
+  if (watchPercentage < config.minimumWatchPercentage) return 0;
+  const watchedSeconds = Math.min(Math.max(0, position), duration);
+  return Math.round(config.xpPerSecond * watchedSeconds);
 }
