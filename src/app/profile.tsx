@@ -56,6 +56,10 @@ export default function ProfileScreen() {
 
         <View style={styles.statsGrid}>
           <View style={styles.statCard}>
+            <Text style={styles.statValue}>{progress.totalXP.toLocaleString()}</Text>
+            <Text style={styles.statLabel}>Total XP</Text>
+          </View>
+          <View style={styles.statCard}>
             <Text style={styles.statValue}>{progress.totalShortsWatched.toLocaleString()}</Text>
             <Text style={styles.statLabel}>Shorts watched</Text>
           </View>

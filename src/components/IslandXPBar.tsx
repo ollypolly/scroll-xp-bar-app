@@ -9,6 +9,11 @@ import { getPrestigeInfo, getRankForLevel } from '../xp/badges';
 import { useProgressStore } from '../store/progressStore';
 import { colors, formatCompactNumber, radii, shadow, spacing } from '../theme/tokens';
 
+function compactLevelProgress(xpIntoLevel: number, xpForNextLevel: number, isMaxLevel: boolean): string {
+  if (isMaxLevel) return 'MAX';
+  return `${formatCompactNumber(xpIntoLevel)}/${formatCompactNumber(xpForNextLevel)} XP`;
+}
+
 const BADGE_SIZE = 24;
 const PRESTIGE_CHIP_WIDTH = 28;
 const MIN_COLLAPSED_WIDTH = 80;
@@ -17,14 +22,15 @@ export const ISLAND_HEIGHT = 40;
 const HOLD_MS = 1800;
 
 /**
- * A Dynamic-Island-style pill: collapsed, it's just the level badge and total XP so it
- * stays out of the way while scrolling. Gaining XP or leveling up expands it into a full
- * progress bar for a couple of seconds, then it collapses back down - the bar isn't
- * permanently taking up screen space over the video.
+ * A Dynamic-Island-style pill: collapsed, it's just the level badge and progress toward
+ * the next level, so it stays out of the way while scrolling. Gaining XP or leveling up
+ * expands it into a full progress bar for a couple of seconds, then it collapses back
+ * down - the bar isn't permanently taking up screen space over the video. Collapsed and
+ * expanded intentionally show the same number (this-level progress), just at different
+ * detail - lifetime total XP lives on the profile screen instead.
  */
 export function IslandXPBar() {
   const level = useProgressStore((state) => state.level);
-  const totalXP = useProgressStore((state) => state.progress.totalXP);
   const prestige = useProgressStore((state) => state.progress.prestige);
   const lastAward = useProgressStore((state) => state.lastAward);
   const lastLevelUp = useProgressStore((state) => state.lastLevelUp);
@@ -133,7 +139,7 @@ export function IslandXPBar() {
         <View style={styles.contentStack}>
           <Animated.View style={[styles.collapsedContent, { opacity: collapsedOpacity }]} pointerEvents="none">
             <Text style={styles.compactXpText} onLayout={handleXpTextLayout}>
-              {formatCompactNumber(totalXP)} XP
+              {compactLevelProgress(level.xpIntoLevel, level.xpForNextLevel, level.isMaxLevel)}
             </Text>
           </Animated.View>
 
