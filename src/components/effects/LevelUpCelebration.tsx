@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import type { LevelUpEvent } from '../../store/progressStore';
+import { colors, radii, spacing } from '../../theme/tokens';
 
 type LevelUpCelebrationProps = {
   event: LevelUpEvent | null;
@@ -77,26 +78,26 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: '#7c3aed',
+    backgroundColor: colors.accentStrong,
   },
   card: {
-    backgroundColor: 'rgba(20,16,32,0.9)',
+    backgroundColor: colors.scrim,
     borderWidth: 2,
-    borderColor: '#fbbf24',
-    borderRadius: 20,
-    paddingHorizontal: 32,
-    paddingVertical: 18,
+    borderColor: colors.gold,
+    borderRadius: radii.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg + 2,
     alignItems: 'center',
     gap: 2,
   },
   label: {
-    color: '#fbbf24',
+    color: colors.gold,
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 2,
   },
   level: {
-    color: '#fff',
+    color: colors.textPrimary,
     fontSize: 40,
     fontWeight: '900',
   },

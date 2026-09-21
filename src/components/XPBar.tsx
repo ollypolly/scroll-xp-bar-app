@@ -5,12 +5,12 @@ import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import { useProgressStore } from '../store/progressStore';
+import { colors, radii, spacing } from '../theme/tokens';
 
 /**
- * Reads directly from the progress store rather than taking currentXP/level as
- * props, so every screen that mounts it (onboarding, debug, shorts) stays in
- * sync without prop drilling. Styled as a self-contained translucent card so it
- * reads clearly as an overlay on top of the WebView, not just on a plain screen.
+ * A static, always-expanded level/XP summary card for screens that aren't overlaying
+ * video content (home, debug) - the Shorts screen uses `IslandXPBar` instead, which
+ * collapses down when there's nothing new to show.
  */
 export function XPBar() {
   const level = useProgressStore((state) => state.level);
@@ -40,7 +40,7 @@ export function XPBar() {
   }, [level.level, levelFlashAnim]);
 
   const widthInterpolated = progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
-  const headerBackground = levelFlashAnim.interpolate({ inputRange: [0, 1], outputRange: ['#1f1f2e', '#7c3aed'] });
+  const headerBackground = levelFlashAnim.interpolate({ inputRange: [0, 1], outputRange: [colors.accentStrong, colors.gold] });
 
   return (
     <View style={styles.container}>
@@ -59,20 +59,22 @@ export function XPBar() {
 
 const styles = StyleSheet.create({
   container: {
-    gap: 6,
-    backgroundColor: 'rgba(15,15,20,0.55)',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
   },
   header: {
     alignSelf: 'flex-start',
-    borderRadius: 999,
-    paddingHorizontal: 10,
+    borderRadius: radii.pill,
+    paddingHorizontal: spacing.sm + 2,
     paddingVertical: 4,
   },
   levelText: {
-    color: '#fff',
+    color: colors.textPrimary,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -80,16 +82,16 @@ const styles = StyleSheet.create({
   track: {
     height: 8,
     borderRadius: 4,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: colors.track,
     overflow: 'hidden',
   },
   progress: {
     height: '100%',
     borderRadius: 4,
-    backgroundColor: '#7c3aed',
+    backgroundColor: colors.accent,
   },
   xpText: {
-    color: 'rgba(255,255,255,0.7)',
+    color: colors.textSecondary,
     fontSize: 11,
   },
 });

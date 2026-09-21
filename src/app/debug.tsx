@@ -1,9 +1,11 @@
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { XPBar } from '../components/XPBar';
 import { useDebugStore } from '../store/debugStore';
 import { useProgressStore } from '../store/progressStore';
+import { colors, radii, spacing, typography } from '../theme/tokens';
 
 function formatTime(timestamp: number): string {
   return new Date(timestamp).toLocaleTimeString();
@@ -18,6 +20,10 @@ export default function DebugScreen() {
       <View style={styles.section}>
         <XPBar />
       </View>
+
+      <TouchableOpacity style={styles.simulatorButton} onPress={() => router.push('/debug-shorts')}>
+        <Text style={styles.simulatorButtonText}>Open Shorts simulator</Text>
+      </TouchableOpacity>
 
       <View style={styles.section}>
         <Text style={styles.heading}>WebView Status</Text>
@@ -64,31 +70,39 @@ export default function DebugScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f0f14',
-    padding: 16,
-    gap: 16,
+    backgroundColor: colors.background,
+    padding: spacing.lg,
+    gap: spacing.lg,
   },
   section: {
-    gap: 4,
+    gap: spacing.xs,
   },
   logSection: {
     flex: 1,
   },
   heading: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 13,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    ...typography.heading,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
   },
   line: {
-    color: 'rgba(255,255,255,0.8)',
+    color: colors.textSecondary,
     fontSize: 13,
   },
   logLine: {
-    color: 'rgba(255,255,255,0.6)',
+    color: colors.textMuted,
     fontSize: 11,
     fontFamily: 'monospace',
+  },
+  simulatorButton: {
+    backgroundColor: colors.accent,
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm + 2,
+    alignItems: 'center',
+  },
+  simulatorButtonText: {
+    color: colors.textPrimary,
+    fontWeight: '700',
+    fontSize: 13,
   },
 });

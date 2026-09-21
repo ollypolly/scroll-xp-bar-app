@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { XPBar } from '../components/XPBar';
 import { useProgressStore } from '../store/progressStore';
+import { colors, radii, spacing, typography } from '../theme/tokens';
 
 export default function OnboardingScreen() {
   const isLoaded = useProgressStore((state) => state.isLoaded);
@@ -11,7 +12,12 @@ export default function OnboardingScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Shorts XP</Text>
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>Shorts XP</Text>
+          <TouchableOpacity style={styles.accountButton} onPress={() => router.push('/signin')}>
+            <Text style={styles.accountButtonText}>{'\u{1F464}'}</Text>
+          </TouchableOpacity>
+        </View>
         <Text style={styles.body}>
           Watch YouTube Shorts right here in the app. XP is only earned for Shorts you actually
           watch — swiping past hundreds of them earns nothing.
@@ -37,38 +43,54 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f0f14',
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 24,
-    gap: 20,
+    paddingHorizontal: spacing.xl,
+    gap: spacing.lg + 4,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   title: {
-    color: '#fff',
-    fontSize: 32,
-    fontWeight: '800',
+    ...typography.title,
+    color: colors.textPrimary,
+  },
+  accountButton: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  accountButtonText: {
+    fontSize: 18,
   },
   body: {
-    color: 'rgba(255,255,255,0.7)',
-    fontSize: 15,
-    lineHeight: 21,
+    ...typography.body,
+    color: colors.textSecondary,
   },
   button: {
-    backgroundColor: '#7c3aed',
-    borderRadius: 12,
-    paddingVertical: 14,
+    backgroundColor: colors.accent,
+    borderRadius: radii.md,
+    paddingVertical: spacing.md + 2,
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: spacing.sm,
   },
   buttonText: {
-    color: '#fff',
+    color: colors.textPrimary,
     fontSize: 16,
     fontWeight: '700',
   },
   debugLink: {
-    color: 'rgba(255,255,255,0.4)',
+    color: colors.textMuted,
     fontSize: 13,
     textAlign: 'center',
   },

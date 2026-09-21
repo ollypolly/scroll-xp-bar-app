@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet } from 'react-native';
 
 import type { AwardEvent } from '../../store/progressStore';
+import { colors } from '../../theme/tokens';
 
 export type Point = { x: number; y: number };
 
@@ -93,8 +94,8 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#fbbf24',
-    shadowColor: '#fbbf24',
+    backgroundColor: colors.gold,
+    shadowColor: colors.gold,
     shadowOpacity: 0.8,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 0 },
