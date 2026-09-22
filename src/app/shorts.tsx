@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -53,6 +54,18 @@ export default function ShortsScreen() {
 
   const orbTarget: Point = { x: SCREEN_WIDTH / 2, y: insets.top + spacing.md + ISLAND_HEIGHT / 2 };
 
+  // If we arrived here by pushing from another screen (the normal case, from the home
+  // screen's "Start scrolling"), just pop back to it instead of pushing a second copy of
+  // home onto the stack. Only falls through to a fresh navigation when there's nowhere to
+  // go back to (e.g. this is the first route after onboarding replaced it).
+  function goHome() {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <WebView
@@ -71,8 +84,8 @@ export default function ShortsScreen() {
 
       <View pointerEvents="box-none" style={styles.overlayLayer}>
         <View pointerEvents="box-none" style={[styles.header, { top: insets.top + spacing.md }]}>
-          <TouchableOpacity style={styles.homeButton} onPress={() => router.push('/')}>
-            <Text style={styles.homeButtonText}>{'\u{1F3E0}'}</Text>
+          <TouchableOpacity style={styles.homeButton} onPress={goHome}>
+            <Ionicons name="home" size={18} color={colors.textSecondary} />
           </TouchableOpacity>
           <IslandXPBar />
         </View>
@@ -122,9 +135,6 @@ const styles = StyleSheet.create({
     borderColor: colors.islandBorder,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  homeButtonText: {
-    fontSize: 18,
   },
   backButton: {
     position: 'absolute',

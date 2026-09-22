@@ -1,3 +1,4 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -65,7 +66,7 @@ export default function HomeScreen() {
         <View style={styles.titleRow}>
           <Logo />
           <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/profile')}>
-            <Text style={styles.profileButtonText}>{'\u{1F464}'}</Text>
+            <Ionicons name="person" size={18} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
         <View>
@@ -131,9 +132,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  profileButtonText: {
-    fontSize: 18,
   },
   heading: {
     ...typography.title,
