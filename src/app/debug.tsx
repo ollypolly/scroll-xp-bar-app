@@ -25,6 +25,10 @@ export default function DebugScreen() {
         <Text style={styles.simulatorButtonText}>Open Shorts simulator</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push('/onboarding')}>
+        <Text style={styles.secondaryButtonText}>Replay onboarding</Text>
+      </TouchableOpacity>
+
       <View style={styles.section}>
         <Text style={styles.heading}>WebView Status</Text>
         <Text style={styles.line}>Current Video ID: {debug.currentVideoId ?? '-'}</Text>
@@ -102,6 +106,19 @@ const styles = StyleSheet.create({
   },
   simulatorButtonText: {
     color: colors.textPrimary,
+    fontWeight: '700',
+    fontSize: 13,
+  },
+  secondaryButton: {
+    backgroundColor: colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm + 2,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {
+    color: colors.textSecondary,
     fontWeight: '700',
     fontSize: 13,
   },

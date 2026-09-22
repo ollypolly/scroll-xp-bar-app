@@ -4,18 +4,19 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Logo } from '../components/Logo';
-import { OnboardingDemoFeed } from '../components/OnboardingDemoFeed';
+import { OnboardingXPDemo } from '../components/OnboardingXPDemo';
 import { RankSurface } from '../components/RankSurface';
 import { useProgressStore } from '../store/progressStore';
 import { colors, radii, spacing, typography } from '../theme/tokens';
-import { RANK_TIERS } from '../xp/badges';
+import { PRESTIGE_TIERS, RANK_TIERS } from '../xp/badges';
 
-const STEP_COUNT = 4;
+const STEP_COUNT = 5;
 
 /**
- * One-time, first-launch walkthrough: what the app is, how XP works, a real (boxed-down)
- * taste of the feed itself, then the full rank ladder as a preview of where levels go.
- * Gated by `progress.hasOnboarded` - see the redirect in the home screen (`index.tsx`).
+ * One-time, first-launch walkthrough: what the app is, how XP works, a sandboxed taste
+ * of the level-up moment, the rank ladder, then the prestige ladder as previews of where
+ * progress goes. Gated by `progress.hasOnboarded` - see the redirect in the home screen
+ * (`index.tsx`).
  */
 export default function OnboardingScreen() {
   const [step, setStep] = useState(0);
@@ -67,14 +68,21 @@ export default function OnboardingScreen() {
             <Text style={styles.body}>Watch at least 20% of a Short to start earning XP for it.</Text>
             <Text style={styles.body}>Watch the whole thing for the full reward — longer Shorts earn more.</Text>
             <Text style={styles.body}>Level up, climb the ranks, and prestige once you hit the cap.</Text>
+            <OnboardingXPDemo />
           </View>
         )}
 
         {step === 2 && (
           <View style={styles.stepBlock}>
-            <Text style={styles.heading}>Try it</Text>
-            <Text style={styles.body}>This preview feed is not real Shorts, but the XP is — swipe up.</Text>
-            <OnboardingDemoFeed />
+            <Text style={styles.heading}>Sign in to YouTube</Text>
+            <Text style={styles.body}>
+              Optional — sign in so the feed matches your usual recommendations and you can like or
+              subscribe as normal while you scroll.
+            </Text>
+            <TouchableOpacity style={styles.signInButton} onPress={() => router.push('/signin')}>
+              <Text style={styles.signInButtonText}>Sign in with YouTube</Text>
+            </TouchableOpacity>
+            <Text style={styles.body}>You can always do this later from the home screen instead.</Text>
           </View>
         )}
 
@@ -85,7 +93,7 @@ export default function OnboardingScreen() {
             <View style={styles.rankList}>
               {RANK_TIERS.map((tier) => (
                 <View key={tier.name} style={styles.rankRow}>
-                  <RankSurface rank={tier} style={styles.rankBadge}>
+                  <RankSurface surface={tier} style={styles.rankBadge}>
                     <Text style={styles.rankIcon}>{tier.icon}</Text>
                   </RankSurface>
                   <View>
@@ -93,6 +101,29 @@ export default function OnboardingScreen() {
                     <Text style={styles.rankLevels}>
                       Lv {tier.minLevel}–{tier.maxLevel}
                     </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {step === 4 && (
+          <View style={styles.stepBlock}>
+            <Text style={styles.heading}>Prestige</Text>
+            <Text style={styles.body}>
+              Hit level 99 and you can prestige — reset to level 1 in exchange for a permanent badge.
+              Do it up to 10 times, and the badge gets flashier every time.
+            </Text>
+            <View style={styles.rankList}>
+              {PRESTIGE_TIERS.map((tier) => (
+                <View key={tier.prestige} style={styles.rankRow}>
+                  <RankSurface surface={tier} style={styles.rankBadge}>
+                    <Text style={styles.rankIcon}>{tier.numeral}</Text>
+                  </RankSurface>
+                  <View>
+                    <Text style={styles.rankName}>{tier.name}</Text>
+                    <Text style={styles.rankLevels}>Prestige {tier.numeral}</Text>
                   </View>
                 </View>
               ))}
@@ -160,6 +191,17 @@ const styles = StyleSheet.create({
   body: {
     ...typography.body,
     color: colors.textSecondary,
+  },
+  signInButton: {
+    backgroundColor: colors.accent,
+    borderRadius: radii.md,
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+  },
+  signInButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
   },
   rankList: {
     gap: spacing.sm,

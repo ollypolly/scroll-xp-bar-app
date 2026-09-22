@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -70,6 +71,9 @@ export default function ShortsScreen() {
 
       <View pointerEvents="box-none" style={styles.overlayLayer}>
         <View pointerEvents="box-none" style={[styles.header, { top: insets.top + spacing.md }]}>
+          <TouchableOpacity style={styles.homeButton} onPress={() => router.push('/')}>
+            <Text style={styles.homeButtonText}>{'\u{1F3E0}'}</Text>
+          </TouchableOpacity>
           <IslandXPBar />
         </View>
 
@@ -105,6 +109,22 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: spacing.md,
     right: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  homeButton: {
+    width: ISLAND_HEIGHT,
+    height: ISLAND_HEIGHT,
+    borderRadius: radii.pill,
+    backgroundColor: colors.island,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.islandBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  homeButtonText: {
+    fontSize: 18,
   },
   backButton: {
     position: 'absolute',

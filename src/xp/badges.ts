@@ -9,13 +9,19 @@ import { MAX_LEVEL } from './levelSystem';
  */
 export type RankMaterial = 'wood' | 'metal' | 'gem';
 
-export type RankTier = {
-  name: string;
-  minLevel: number;
-  maxLevel: number;
+/** Anything `RankSurface` can render as a background: a flat `color` for wood/metal, or
+ * a `gradient` plus shine sweep for gem. Shared by rank tiers and prestige tiers so the
+ * same "boring flat color escalating to sparkling gem" language applies to both. */
+export type MaterialSurface = {
   material: RankMaterial;
   color: string;
   gradient?: readonly [string, string, string];
+};
+
+export type RankTier = MaterialSurface & {
+  name: string;
+  minLevel: number;
+  maxLevel: number;
   icon: string;
 };
 
@@ -69,33 +75,93 @@ export function getRankForLevel(level: number): RankTier {
   return RANK_TIERS.find((tier) => clamped >= tier.minLevel && clamped <= tier.maxLevel) ?? RANK_TIERS[0];
 }
 
-/** Prestiging resets level 1-100 back to 1 in exchange for a permanent, increasingly
- * elaborate emblem - up to 10 times, same shape as Call of Duty's prestige system. */
-export const MAX_PRESTIGE = 10;
+export type PrestigeTier = MaterialSurface & {
+  prestige: number;
+  numeral: string;
+  name: string;
+};
 
-const PRESTIGE_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
-const PRESTIGE_COLORS = [
-  '#cd7f32',
-  '#c0c0c0',
-  '#ffd700',
-  '#b9f2ff',
-  '#50c878',
-  '#ff6f61',
-  '#9b5de5',
-  '#00bbf9',
-  '#f15bb5',
-  '#f5f5f7',
+/** Prestiging resets level 1-99 back to 1 in exchange for a permanent, increasingly
+ * elaborate emblem - up to 10 times, same shape as Call of Duty's prestige system. Same
+ * material escalation as the rank ladder (flat metal building to shimmering gem), just
+ * compressed into 10 steps instead of 99 levels. */
+export const PRESTIGE_TIERS: PrestigeTier[] = [
+  { prestige: 1, numeral: 'I', name: 'Bronze', material: 'metal', color: '#cd7f32' },
+  { prestige: 2, numeral: 'II', name: 'Silver', material: 'metal', color: '#c0c0c0' },
+  { prestige: 3, numeral: 'III', name: 'Gold', material: 'metal', color: '#ffd700' },
+  {
+    prestige: 4,
+    numeral: 'IV',
+    name: 'Diamond',
+    material: 'gem',
+    color: '#b9f2ff',
+    gradient: ['#0d4f5c', '#b9f2ff', '#0d4f5c'],
+  },
+  {
+    prestige: 5,
+    numeral: 'V',
+    name: 'Emerald',
+    material: 'gem',
+    color: '#50c878',
+    gradient: ['#0b5c34', '#50c878', '#0b5c34'],
+  },
+  {
+    prestige: 6,
+    numeral: 'VI',
+    name: 'Ruby',
+    material: 'gem',
+    color: '#ff6f61',
+    gradient: ['#7a1f1a', '#ff6f61', '#7a1f1a'],
+  },
+  {
+    prestige: 7,
+    numeral: 'VII',
+    name: 'Amethyst',
+    material: 'gem',
+    color: '#9b5de5',
+    gradient: ['#3d1a6b', '#9b5de5', '#3d1a6b'],
+  },
+  {
+    prestige: 8,
+    numeral: 'VIII',
+    name: 'Sapphire',
+    material: 'gem',
+    color: '#00bbf9',
+    gradient: ['#04395c', '#00bbf9', '#04395c'],
+  },
+  {
+    prestige: 9,
+    numeral: 'IX',
+    name: 'Pink Diamond',
+    material: 'gem',
+    color: '#f15bb5',
+    gradient: ['#6b1a4f', '#f15bb5', '#6b1a4f'],
+  },
+  {
+    prestige: 10,
+    numeral: 'X',
+    name: 'Prismatic',
+    material: 'gem',
+    color: '#f5f5f7',
+    gradient: ['#b9c4ff', '#ffffff', '#ffb9f8'],
+  },
 ];
 
-export type PrestigeInfo = { prestige: number; label: string; color: string };
+export const MAX_PRESTIGE = PRESTIGE_TIERS.length;
+
+export type PrestigeInfo = MaterialSurface & { prestige: number; label: string; name: string };
 
 export function getPrestigeInfo(prestige: number): PrestigeInfo {
   const clamped = Math.min(Math.max(Math.floor(prestige), 0), MAX_PRESTIGE);
-  if (clamped === 0) return { prestige: 0, label: '', color: '' };
+  if (clamped === 0) return { prestige: 0, label: '', name: '', material: 'metal', color: '' };
+  const tier = PRESTIGE_TIERS[clamped - 1];
   return {
     prestige: clamped,
-    label: `Prestige ${PRESTIGE_NUMERALS[clamped - 1]}`,
-    color: PRESTIGE_COLORS[clamped - 1],
+    label: `Prestige ${tier.numeral}`,
+    name: tier.name,
+    material: tier.material,
+    color: tier.color,
+    gradient: tier.gradient,
   };
 }
 

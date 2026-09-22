@@ -9,11 +9,31 @@ import { useProgressStore } from '../store/progressStore';
 import { colors, radii, spacing, typography } from '../theme/tokens';
 import { canPrestige, getPrestigeInfo } from '../xp/badges';
 
+/** Returning-user status line under the "Welcome back" heading - the first-time
+ * explanation of how XP works now lives in /onboarding, so this just reports where
+ * you left off instead of re-explaining the rules every visit. */
+function welcomeBackSubtext(
+  totalShortsWatched: number,
+  currentStreak: number,
+  isMaxLevel: boolean,
+  xpIntoLevel: number,
+  xpForNextLevel: number,
+  nextLevel: number,
+  eligibleForPrestige: boolean,
+): string {
+  if (totalShortsWatched === 0) return 'Ready when you are.';
+  if (isMaxLevel) return eligibleForPrestige ? 'Max level — ready to prestige.' : 'Max level reached.';
+  const streakPrefix = currentStreak >= 2 ? `${currentStreak}-day streak. ` : '';
+  return `${streakPrefix}${(xpForNextLevel - xpIntoLevel).toLocaleString()} XP to level ${nextLevel}.`;
+}
+
 /** The home screen. First-ever launch bounces straight to `/onboarding` instead - this
  * screen is what you land on for every visit after that. */
 export default function HomeScreen() {
   const isLoaded = useProgressStore((state) => state.isLoaded);
   const hasOnboarded = useProgressStore((state) => state.progress.hasOnboarded);
+  const totalShortsWatched = useProgressStore((state) => state.progress.totalShortsWatched);
+  const currentStreak = useProgressStore((state) => state.progress.currentStreak);
   const level = useProgressStore((state) => state.level);
   const prestige = useProgressStore((state) => state.progress.prestige);
   const prestigeUp = useProgressStore((state) => state.prestigeUp);
@@ -44,18 +64,24 @@ export default function HomeScreen() {
       <View style={styles.content}>
         <View style={styles.titleRow}>
           <Logo />
-          <TouchableOpacity style={styles.accountButton} onPress={() => router.push('/signin')}>
-            <Text style={styles.accountButtonText}>{'\u{1F464}'}</Text>
+          <TouchableOpacity style={styles.profileButton} onPress={() => router.push('/profile')}>
+            <Text style={styles.profileButtonText}>{'\u{1F464}'}</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.body}>
-          Watch YouTube Shorts right here in the app. XP is only earned for Shorts you actually
-          watch — swiping past hundreds of them earns nothing.
-        </Text>
-        <Text style={styles.body}>
-          Watch at least 20% of a Short to start earning XP. Watch the whole thing for the full
-          reward.
-        </Text>
+        <View>
+          <Text style={styles.heading}>Welcome back.</Text>
+          <Text style={styles.body}>
+            {welcomeBackSubtext(
+              totalShortsWatched,
+              currentStreak,
+              level.isMaxLevel,
+              level.xpIntoLevel,
+              level.xpForNextLevel,
+              level.level + 1,
+              eligibleForPrestige,
+            )}
+          </Text>
+        </View>
 
         {isLoaded ? <XPBar /> : null}
 
@@ -64,6 +90,10 @@ export default function HomeScreen() {
             <Text style={styles.prestigeButtonText}>Prestige</Text>
           </TouchableOpacity>
         )}
+
+        <TouchableOpacity style={styles.signInButton} onPress={() => router.push('/signin')}>
+          <Text style={styles.signInButtonText}>Sign in to YouTube</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.button} onPress={() => router.push('/shorts')}>
           <Text style={styles.buttonText}>Start scrolling</Text>
@@ -92,7 +122,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  accountButton: {
+  profileButton: {
     width: 40,
     height: 40,
     borderRadius: radii.pill,
@@ -102,8 +132,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  accountButtonText: {
+  profileButtonText: {
     fontSize: 18,
+  },
+  heading: {
+    ...typography.title,
+    fontSize: 24,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
   },
   body: {
     ...typography.body,
@@ -139,5 +175,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  signInButton: {
+    backgroundColor: colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.accent,
+    borderRadius: radii.md,
+    paddingVertical: spacing.sm + 2,
+    alignItems: 'center',
+  },
+  signInButtonText: {
+    color: colors.accent,
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

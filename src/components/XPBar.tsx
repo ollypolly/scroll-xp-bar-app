@@ -50,7 +50,7 @@ export function XPBar() {
   return (
     <View style={styles.container}>
       <View style={styles.rankRow}>
-        <RankSurface rank={rank} flash={levelFlashAnim} style={styles.header}>
+        <RankSurface surface={rank} flash={levelFlashAnim} style={styles.header}>
           <Text style={styles.levelText}>
             {rank.icon} {rank.name.toUpperCase()} · LV {level.level}
           </Text>
@@ -60,7 +60,7 @@ export function XPBar() {
         )}
       </View>
       <View style={styles.track}>
-        <RankSurface rank={rank} style={[styles.progress, { width: widthInterpolated }]} />
+        <Animated.View style={[styles.progress, { width: widthInterpolated }]} />
       </View>
       <Text style={styles.xpText}>
         {level.isMaxLevel
@@ -115,6 +115,7 @@ const styles = StyleSheet.create({
   progress: {
     height: '100%',
     borderRadius: 4,
+    backgroundColor: colors.accent,
   },
   xpText: {
     color: colors.textSecondary,

@@ -14,7 +14,7 @@ scoreboard on the loop you're already in.
 - Levels follow a RuneScape-style exponential curve capped at level 99 (RuneScape's own cap) — the first couple of levels come quickly, then the XP required ramps up steeply. Hitting 99 unlocks prestiging back to level 1, up to 10 times.
 - Rank tiers escalate materially as you climb: plain wood at level 1, through bronze/iron/silver/gold, into genuinely animated gem tiers (emerald → sapphire → ruby → a prismatic top tier) with a looping shine sweep — see `RankSurface`.
 - The one saturated color in an otherwise monochrome UI is the active source's accent (YouTube red today) — see `SOURCE_ACCENTS` in `src/theme/tokens.ts`, keyed so a future second source gets its own accent without a redesign.
-- A native overlay (not a WebView DOM overlay, which the page itself can occlude or break) shows the current level and XP bar at all times, with a Minecraft-style orb animation on XP gain and a full-screen flourish on level-up (with a tap-to-prestige button once eligible), backed by haptics and sound effects.
+- A native overlay (not a WebView DOM overlay, which the page itself can occlude or break) shows the current level and XP bar at all times, with a Minecraft-style orb animation on XP gain and a full-screen flourish on level-up (with a tap-to-prestige button once eligible), backed by haptics.
 
 ## Stack
 
@@ -22,7 +22,7 @@ scoreboard on the loop you're already in.
 - `react-native-webview` for the video feed, with an injected observation-only script
 - Zustand + AsyncStorage for XP/level state persistence
 - React Native's built-in `Animated` API plus `expo-linear-gradient` for the orb-burst, level-up, and gem-tier shimmer animations
-- `expo-haptics` / `expo-audio` for feedback
+- `expo-haptics` for feedback (`expo-audio`-based sound effects are wired up but currently disabled — see Known limitations)
 
 ## Running
 
@@ -73,6 +73,6 @@ npm test             # jest
 
 ## Known limitations
 
-- The YouTube sign-in flow (account icon on the home screen) goes through Google's login inside a WebView with a spoofed user agent. Google actively detects and can block embedded-webview logins, so this may stop working at any time regardless of the workaround.
-- Placeholder sound effects are synthesized tones, not final assets.
+- The YouTube sign-in flow ("Sign in to YouTube" on the home screen) goes through Google's login inside a WebView with a spoofed user agent. Google actively detects and can block embedded-webview logins, so this may stop working at any time regardless of the workaround.
+- XP-gain/level-up sound effects are disabled (`useEffectSounds` is a no-op): playing them activated the app's audio session and interrupted the WebView's video playback. Needs an audio-focus approach that doesn't compete with the video before re-enabling.
 - The Shorts screen's XP pill visually mimics a Dynamic Island but isn't a real one — see [BACKLOG.md](BACKLOG.md).

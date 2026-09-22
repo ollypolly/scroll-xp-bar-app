@@ -107,6 +107,11 @@ export function IslandXPBar() {
     ]).start();
   }, [lastLevelUp, expand, flashAnim]);
 
+  // A couple of px of slack over the measured text width - an exact fit leaves zero
+  // margin for native rounding between the measurement pass and the actual render,
+  // which was enough on its own to wrap "XP" onto a second line.
+  const TEXT_WIDTH_SLACK = 4;
+
   const hasPrestige = prestige > 0;
   const collapsedWidth = Math.max(
     MIN_COLLAPSED_WIDTH,
@@ -114,6 +119,7 @@ export function IslandXPBar() {
       BADGE_SIZE +
       spacing.sm +
       xpTextWidth +
+      TEXT_WIDTH_SLACK +
       (hasPrestige ? PRESTIGE_CHIP_WIDTH + spacing.xs : 0),
   );
   const width = expandAnim.interpolate({ inputRange: [0, 1], outputRange: [collapsedWidth, EXPANDED_WIDTH] });
@@ -124,7 +130,7 @@ export function IslandXPBar() {
   return (
     <Pressable onPress={handlePress} style={styles.pressable}>
       <Animated.View style={[styles.island, shadow.island, { width }]}>
-        <RankSurface rank={rank} flash={flashAnim} style={styles.badge}>
+        <RankSurface surface={rank} flash={flashAnim} style={styles.badge}>
           <Text style={styles.badgeText}>{level.level}</Text>
         </RankSurface>
 
@@ -136,16 +142,28 @@ export function IslandXPBar() {
           </View>
         )}
 
+        {/* Measures the collapsed XP text's true single-line width, decoupled from the
+            visible copy below - that one lives inside a box whose width is *derived from*
+            this measurement, so measuring it directly would be circular (it'd report back
+            whatever width it was already squeezed into, never its actual desired size). */}
+        <Text
+          style={[styles.compactXpText, styles.hiddenMeasure]}
+          numberOfLines={1}
+          onLayout={handleXpTextLayout}
+        >
+          {compactLevelProgress(level.xpIntoLevel, level.xpForNextLevel, level.isMaxLevel)}
+        </Text>
+
         <View style={styles.contentStack}>
           <Animated.View style={[styles.collapsedContent, { opacity: collapsedOpacity }]} pointerEvents="none">
-            <Text style={styles.compactXpText} onLayout={handleXpTextLayout}>
+            <Text style={styles.compactXpText} numberOfLines={1}>
               {compactLevelProgress(level.xpIntoLevel, level.xpForNextLevel, level.isMaxLevel)}
             </Text>
           </Animated.View>
 
           <Animated.View style={[styles.expandedContent, { opacity: expandedOpacity }]} pointerEvents="none">
             <View style={styles.track}>
-              <RankSurface rank={rank} style={[styles.progress, { width: progressWidth }]} />
+              <Animated.View style={[styles.progress, { width: progressWidth }]} />
             </View>
             <Text style={styles.xpText}>
               {level.isMaxLevel
@@ -218,6 +236,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  hiddenMeasure: {
+    position: 'absolute',
+    opacity: 0,
+  },
   expandedContent: {
     ...StyleSheet.absoluteFill,
     justifyContent: 'center',
@@ -232,6 +254,7 @@ const styles = StyleSheet.create({
   progress: {
     height: '100%',
     borderRadius: radii.sm,
+    backgroundColor: colors.accent,
   },
   xpText: {
     color: colors.textSecondary,

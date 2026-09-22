@@ -4,10 +4,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
-import type { RankTier } from '../xp/badges';
+import type { MaterialSurface } from '../xp/badges';
 
 type RankSurfaceProps = {
-  rank: RankTier;
+  surface: MaterialSurface;
   style?: StyleProp<ViewStyle>;
   /** 0-1 Animated.Value; briefly overlays white to call out a change (e.g. a level-up),
    * independent of the base material so it works the same on flat and gem tiers. */
@@ -16,16 +16,16 @@ type RankSurfaceProps = {
 };
 
 /**
- * Renders a rank tier's material as a background: a flat fill for wood/metal tiers, or
- * a gradient with a looping diagonal shine sweep for gem tiers - so the tier ladder
- * genuinely reads as "plain plank" building up to "sparkling gemstone" by the level cap.
- * Sizing/shape (circle badge vs. pill header) is entirely up to the caller's `style`.
+ * Renders a rank or prestige tier's material as a background: a flat fill for wood/metal
+ * tiers, or a gradient with a looping diagonal shine sweep for gem tiers - so a tier
+ * ladder genuinely reads as "plain plank/metal" building up to "sparkling gemstone" by
+ * the top of it. Sizing/shape (circle badge vs. pill header) is up to the caller's `style`.
  */
-export function RankSurface({ rank, style, flash, children }: RankSurfaceProps) {
+export function RankSurface({ surface, style, flash, children }: RankSurfaceProps) {
   const shimmerAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (rank.material !== 'gem') return;
+    if (surface.material !== 'gem') return;
     const loop = Animated.loop(
       Animated.sequence([
         Animated.delay(1200),
@@ -35,24 +35,24 @@ export function RankSurface({ rank, style, flash, children }: RankSurfaceProps) 
     );
     loop.start();
     return () => loop.stop();
-  }, [rank.material, shimmerAnim]);
+  }, [surface.material, shimmerAnim]);
 
   const shimmerTranslate = shimmerAnim.interpolate({ inputRange: [0, 1], outputRange: [-80, 80] });
 
   return (
     <Animated.View style={[styles.base, style]}>
-      {rank.material === 'gem' && rank.gradient ? (
+      {surface.material === 'gem' && surface.gradient ? (
         <LinearGradient
-          colors={rank.gradient}
+          colors={surface.gradient}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
       ) : (
-        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: rank.color }]} />
+        <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: surface.color }]} />
       )}
 
-      {rank.material === 'gem' && (
+      {surface.material === 'gem' && (
         <Animated.View
           pointerEvents="none"
           style={[styles.shineWrap, { transform: [{ translateX: shimmerTranslate }, { rotate: '25deg' }] }]}
