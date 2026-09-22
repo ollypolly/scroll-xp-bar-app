@@ -38,6 +38,9 @@ type ProgressState = {
   clearLastAward: () => void;
   clearLastLevelUp: () => void;
   completeOnboarding: () => void;
+  /** Debug-only: flips `hasOnboarded` back to false so the home screen's redirect effect
+   * sends you into `/onboarding` again, without touching XP/level/streak/prestige. */
+  resetOnboarding: () => void;
   setSignedInToYouTube: (signedIn: boolean) => void;
 };
 
@@ -97,6 +100,12 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
 
   completeOnboarding: () => {
     const updated: UserProgress = { ...get().progress, hasOnboarded: true };
+    set({ progress: updated });
+    void saveUserProgress(updated);
+  },
+
+  resetOnboarding: () => {
+    const updated: UserProgress = { ...get().progress, hasOnboarded: false };
     set({ progress: updated });
     void saveUserProgress(updated);
   },

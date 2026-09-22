@@ -14,6 +14,7 @@ function formatTime(timestamp: number): string {
 export default function DebugScreen() {
   const debug = useDebugStore();
   const progress = useProgressStore((state) => state.progress);
+  const resetOnboarding = useProgressStore((state) => state.resetOnboarding);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -33,6 +34,16 @@ export default function DebugScreen() {
         }}
       >
         <Text style={styles.secondaryButtonText}>Replay onboarding</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.secondaryButton}
+        onPress={() => {
+          resetOnboarding();
+          router.dismissTo('/');
+        }}
+      >
+        <Text style={styles.secondaryButtonText}>Reset onboarding status</Text>
       </TouchableOpacity>
 
       <View style={styles.section}>
