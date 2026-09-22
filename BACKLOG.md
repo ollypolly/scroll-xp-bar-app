@@ -26,6 +26,10 @@ layers (`foregroundImage`/`backgroundImage`/`monochromeImage`), the favicon, and
 
 Needs, to actually get a build to a friend:
 
+- **An active Apple Developer Program membership (£99/year)** - required for any App
+  Store Connect / TestFlight distribution, separate from a free Apple ID. Only the user
+  can pay for and sign into this; check whether it's already active before assuming it
+  needs (re-)purchasing.
 - An EAS build profile suited for TestFlight-only sharing (internal distribution or a
   `preview`/`production` profile - check `eas.json`, since a prior session scaffolded an
   EAS project already per the "Scaffold EAS project and TestFlight build pipeline" commit).
