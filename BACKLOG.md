@@ -2,6 +2,22 @@
 
 Deferred ideas, not yet scheduled.
 
+## Level curve feels too fast, needs redoing
+
+`src/xp/levelSystem.ts`'s RuneScape-style curve (`DEFAULT_LEVEL_CONFIG`) was tuned assuming
+a 1->99 run should cost ~460k XP (~65-80 hours at ~100 XP/Short). In practice, tested live
+at level 19 (2026-09-22): level 19->20 cost 555 XP (~5-6 Shorts), and even level 50->51 -
+supposedly well into the steep part of the curve - only costs ~2,300 XP, roughly 23 Shorts
+(~19 minutes). User feedback: that's still not much for the midgame, curve needs reworking
+so leveling slows down more noticeably earlier.
+
+Needs a design pass on `growthBase`/`growthRate`/`scale` (or a different curve shape
+entirely) - not just a retune of the existing constants, since the felt problem is the
+whole trajectory, not one number. Revisit `xpRequiredForLevel`'s comment block, which
+documents the current (apparently wrong) assumptions.
+
+Status: backlog 2026-09-22 - not started, needs a design discussion before implementation.
+
 ## Rename the GitHub repo to match the app
 
 Still `ollypolly/scroll-xp-bar-app` from before the "One More" rebrand. `app.json` already
@@ -56,33 +72,52 @@ by Expo's own tooling). Verified with a clean `npm ci`, typecheck, lint, tests, 
 
 Next: retry `eas build --platform ios --profile production`.
 
-## Swipe-back gesture doesn't work on the Shorts screen
+## Shorts screen WebView navigation quirks
 
-The Shorts screen keeps its WebView alive by never letting it be popped - the home icon
-and "Start scrolling" only ever `push`/`dismissTo` (see `src/app/shorts.tsx` and the home
-screen's button), so leaving and returning resumes the same session instead of reloading
-YouTube. iOS's native edge-swipe-to-go-back gesture bypasses that entirely though: it
-triggers React Navigation's plain pop directly, which isn't even reaching JS right now -
-swiping back from Shorts does nothing, while the same gesture works fine on every other
-screen in the stack (confirmed 2026-09-22 by testing on device: home → Shorts → swipe
-back → nothing; Shorts → home button → swipe back → correctly returns to the live feed).
+Two separate issues, both stemming from the Shorts screen embedding a full YouTube mobile
+web session in a `WebView` (`src/app/shorts.tsx`) rather than a purpose-built player.
 
-Likely cause: the full-bleed WebView's own touch handling is winning the touch-arbitration
-race against the native edge-pan gesture recognizer - a known category of friction between
-`react-native-webview` and native-stack navigators, not something with a documented one-line
-fix.
-
-Two possible directions, both needing on-device iteration to verify (not diagnosable
-without a real device):
-
-- Find a way to let the OS edge gesture win the race (some `react-native-webview`/gesture
-  configuration), then intercept the resulting pop (e.g. `beforeRemove`) and redirect it to
-  the same push-based "go home" navigation the button uses, so it doesn't destroy the WebView.
+**Swipe-back gesture doesn't work.** The screen keeps its WebView alive by never letting it
+be popped - the home icon and "Start scrolling" only ever `push`/`dismissTo`, so leaving and
+returning resumes the same session instead of reloading YouTube. iOS's native edge-swipe-to-
+go-back gesture bypasses that entirely though: it triggers React Navigation's plain pop
+directly, which isn't even reaching JS right now - swiping back from Shorts does nothing,
+while the same gesture works fine on every other screen in the stack (confirmed 2026-09-22
+by testing on device: home → Shorts → swipe back → nothing; Shorts → home button → swipe
+back → correctly returns to the live feed). Likely cause: the full-bleed WebView's own touch
+handling winning the touch-arbitration race against the native edge-pan gesture recognizer -
+a known category of friction between `react-native-webview` and native-stack navigators, not
+something with a documented one-line fix. Two possible directions, both needing on-device
+iteration to verify:
+- Find a way to let the OS edge gesture win the race, then intercept the resulting pop (e.g.
+  `beforeRemove`) and redirect it to the same push-based "go home" navigation the button
+  uses, so it doesn't destroy the WebView.
 - Or explicitly set `gestureEnabled: false` for this screen so the disabled gesture is a
   deliberate choice instead of an accidental side effect, and rely on the home button as the
   only way off Shorts.
 
-Status: deferred 2026-09-22 — can wait, home button remains the reliable way off Shorts.
+**"Back to Shorts" arrow disappears while still stuck in a channel's queue.** Added
+2026-09-22: a header icon (`onShortsPage` in `shorts.tsx`) shows a back arrow whenever the
+WebView's URL doesn't contain `youtube.com/shorts`, letting you jump back to the main feed
+after tapping into a channel. But tested live the same day: tapping a video *within* a
+channel's Shorts tab lands on a `youtube.com/shorts/<id>` permalink, which matches the same
+substring check and hides the arrow again - except swiping from there only queues up more of
+that channel's videos, not the main algorithmic feed, and the URL doesn't change as you swipe
+within it. The check can't tell "main feed" and "channel-scoped queue" apart from the URL
+alone; both look identical. `WebViewNavigation.navigationType` (react-native-webview docs,
+checked 2026-09-22 via context7) would help distinguish a real link tap from an in-feed swipe,
+but it's iOS-only, so not a full fix. The likely real fix is hooking a click listener into the
+already-injected JS (`youtubeInjection.ts`, which already has a foothold in the page for XP
+tracking) to flag taps on channel/creator links specifically, setting a sticky "strayed from
+home feed" flag cleared only by tapping the arrow - independent of whatever URL is landed on
+afterward. Blocked on not knowing YouTube mobile web's current DOM structure for those link
+elements; needs on-device inspection to get real selectors rather than guessing blind (checked
+2026-09-22: no Expo/EAS feature - Build, Orbit, dev builds - offers a remotely-drivable cloud
+simulator/emulator that could substitute for this, so it needs Safari's Develop menu → remote
+WebView inspector while a physical device is connected, or a third-party device farm).
+
+Status: deferred 2026-09-22 — home button remains the reliable way off Shorts in the
+meantime; the new back arrow is a partial improvement, not a full fix.
 
 ## Real iOS Dynamic Island / Live Activity
 

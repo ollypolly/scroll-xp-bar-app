@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, usePathname } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView, type WebViewNavigation } from 'react-native-webview';
 
@@ -102,20 +102,19 @@ export default function ShortsScreen() {
 
       <View pointerEvents="box-none" style={styles.overlayLayer}>
         <View pointerEvents="box-none" style={[styles.header, { top: insets.top + spacing.md }]}>
+          {!onShortsPage && (
+            <TouchableOpacity
+              style={styles.homeButton}
+              onPress={() => webViewRef.current?.injectJavaScript(`window.location.href = ${JSON.stringify(SHORTS_URL)}; true;`)}
+            >
+              <Ionicons name="arrow-back" size={18} color={colors.textSecondary} />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity style={styles.homeButton} onPress={goHome}>
             <Ionicons name="home" size={18} color={colors.textSecondary} />
           </TouchableOpacity>
           <IslandXPBar />
         </View>
-
-        {!onShortsPage && (
-          <TouchableOpacity
-            style={[styles.backButton, { top: insets.top + spacing.md + ISLAND_HEIGHT + spacing.sm }]}
-            onPress={() => webViewRef.current?.injectJavaScript(`window.location.href = ${JSON.stringify(SHORTS_URL)}; true;`)}
-          >
-            <Text style={styles.backButtonText}>Back to Shorts</Text>
-          </TouchableOpacity>
-        )}
 
         <XPOrbBurst award={lastAward} spawnPoint={ORB_SPAWN_POINT} targetPoint={orbTarget} />
       </View>
@@ -153,20 +152,5 @@ const styles = StyleSheet.create({
     borderColor: colors.islandBorder,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  backButton: {
-    position: 'absolute',
-    alignSelf: 'center',
-    backgroundColor: colors.island,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.islandBorder,
-    borderRadius: radii.pill,
-    paddingHorizontal: spacing.md + 2,
-    paddingVertical: spacing.sm,
-  },
-  backButtonText: {
-    color: colors.textPrimary,
-    fontSize: 13,
-    fontWeight: '600',
   },
 });
