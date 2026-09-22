@@ -2,15 +2,30 @@ import { router } from 'expo-router';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useDebugStore } from '../store/debugStore';
 import { useProgressStore } from '../store/progressStore';
 import { colors, radii, spacing, typography } from '../theme/tokens';
 
 /** Marks onboarding complete and drops straight into the real feed - shared by every
- * step's "Skip" and by the final step's "Start scrolling". */
+ * step's "Skip" and by the final step's "Start scrolling". Steps navigate between each
+ * other with `replace` (see each step file), so at any point there's only ever one
+ * onboarding screen in history - `back()` from here always lands wherever onboarding
+ * was entered from, whether that's the cold-launch redirect or the debug screen.
+ *
+ * A debug-triggered replay (see `debug.tsx`) shouldn't drop into `/shorts` at all - it's
+ * a preview, so finishing it should just exit back to the debug screen. */
 export function useFinishOnboarding() {
   const completeOnboarding = useProgressStore((state) => state.completeOnboarding);
+  const isReplaying = useDebugStore((state) => state.isReplayingOnboarding);
+  const setReplayingOnboarding = useDebugStore((state) => state.setReplayingOnboarding);
+
   return () => {
     completeOnboarding();
+    if (isReplaying) {
+      setReplayingOnboarding(false);
+      router.back();
+      return;
+    }
     router.replace('/shorts');
   };
 }

@@ -14,7 +14,7 @@ export default function OnboardingHowItWorksScreen() {
     <OnboardingStepLayout
       step={1}
       totalSteps={TOTAL_STEPS}
-      onNext={() => router.push('/onboarding/sign-in')}
+      onNext={() => router.replace('/onboarding/sign-in')}
       onSkip={finish}
     >
       <View style={onboardingText.stepBlock}>

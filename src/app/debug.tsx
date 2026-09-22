@@ -25,7 +25,13 @@ export default function DebugScreen() {
         <Text style={styles.simulatorButtonText}>Open Shorts simulator</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push('/onboarding')}>
+      <TouchableOpacity
+        style={styles.secondaryButton}
+        onPress={() => {
+          debug.setReplayingOnboarding(true);
+          router.push('/onboarding');
+        }}
+      >
         <Text style={styles.secondaryButtonText}>Replay onboarding</Text>
       </TouchableOpacity>
 

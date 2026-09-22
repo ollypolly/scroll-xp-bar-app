@@ -15,7 +15,7 @@ export default function OnboardingRanksScreen() {
     <OnboardingStepLayout
       step={3}
       totalSteps={TOTAL_STEPS}
-      onNext={() => router.push('/onboarding/prestige')}
+      onNext={() => router.replace('/onboarding/prestige')}
       onSkip={finish}
     >
       <View style={onboardingText.stepBlock}>

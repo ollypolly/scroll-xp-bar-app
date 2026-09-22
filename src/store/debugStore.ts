@@ -38,6 +38,11 @@ type DebugState = DebugSettings & {
   loadDebugSettings: () => Promise<void>;
   setXpOnScroll: (value: boolean) => void;
   setLevelUpOnScroll: (value: boolean) => void;
+  /** Set right before pushing into `/onboarding` from this screen, so onboarding knows
+   * to just exit back here on finish instead of continuing into `/shorts`. Never
+   * persisted - a replay is always a fresh, in-session choice. */
+  isReplayingOnboarding: boolean;
+  setReplayingOnboarding: (value: boolean) => void;
 };
 
 const MAX_LOG_ENTRIES = 200;
@@ -57,6 +62,7 @@ export const useDebugStore = create<DebugState>((set, get) => ({
   videoChangeCount: 0,
   eventsReceivedCount: 0,
   log: [],
+  isReplayingOnboarding: false,
 
   logEvent: (message) =>
     set((state) => ({
@@ -88,4 +94,6 @@ export const useDebugStore = create<DebugState>((set, get) => ({
     set({ levelUpOnScroll: value });
     saveDebugSettings({ xpOnScroll: get().xpOnScroll, levelUpOnScroll: value });
   },
+
+  setReplayingOnboarding: (value) => set({ isReplayingOnboarding: value }),
 }));
