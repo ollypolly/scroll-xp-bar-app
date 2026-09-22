@@ -39,18 +39,22 @@ Needs, to actually get a build to a friend:
 - Adding the friend as an external (or internal, if on the same Apple dev team) TestFlight
   tester in App Store Connect - this step is entirely in Apple's UI, not automatable here.
 
-Status: blocked 2026-09-22 — `eas.json`'s `production` build profile (no `distribution` set,
-defaults to `store`) and `submit.production` (empty, prompts interactively) are already
+Status: in progress 2026-09-22 — `eas.json`'s `production` build profile (no `distribution`
+set, defaults to `store`) and `submit.production` (empty, prompts interactively) are already
 correctly configured for a TestFlight-bound build - confirmed against current EAS docs, no
-changes needed. Tried `eas build --platform ios --profile production`: got past the "standard
-encryption" prompt and Apple ID login/2FA, but failed at "Authentication with Apple Developer
-Portal failed! You have no team associated with your Apple account." User enrolled as an
-individual (not an org); developer.apple.com/account initially looked active under the same
-Apple ID EAS is using, but turns out enrollment is still waiting on an Apple confirmation
-email - not actually finished provisioning yet, despite the account page looking done. Also
-matches a known lag issue either way: github.com/expo/eas-cli/issues/2072. Next: once that
-confirmation email lands and the team shows up properly, retry `eas build --platform ios
---profile production`. No config changes needed once the team is provisioned.
+changes needed. Apple's "no team associated" auth error (a provisioning propagation lag,
+matching github.com/expo/eas-cli/issues/2072) has since resolved itself - Apple's team now
+shows up correctly and builds get past auth, cert/profile creation.
+
+Hit a second, unrelated blocker: `eas build` was failing fast at "Install dependencies" with
+an `npm ci` ERESOLVE conflict - `expo` and `@expo/router-server` both declare an unpinned
+peerOptional `react-dom`, which npm's resolver floated to `19.3.0` (needs `react@^19.3.0`)
+against this project's pinned `react@19.2.3`. Fixed by pinning `react-dom@19.2.3` in
+`devDependencies` (it's not actually used at runtime - no `react-native-web` - only pulled in
+by Expo's own tooling). Verified with a clean `npm ci`, typecheck, lint, tests, and
+`expo-doctor`; committed and pushed.
+
+Next: retry `eas build --platform ios --profile production`.
 
 ## Swipe-back gesture doesn't work on the Shorts screen
 
