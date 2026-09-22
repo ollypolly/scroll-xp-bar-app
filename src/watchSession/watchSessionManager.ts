@@ -68,6 +68,10 @@ export class WatchSessionTracker {
       case 'VIDEO_ENDED':
         this.updateProgress(event.videoId, event.position, event.duration, now);
         return this.finishSession(event.videoId, config);
+
+      // Handled upstream in useYouTubeShortsBridge before it ever reaches the tracker.
+      case 'SIGN_IN_STATUS':
+        return null;
     }
   }
 

@@ -20,6 +20,7 @@ export function useYouTubeShortsBridge(config: XPConfig) {
 
   const awardXP = useProgressStore((state) => state.awardXP);
   const rewardedVideoIds = useProgressStore((state) => state.progress.rewardedVideoIds);
+  const setSignedInToYouTube = useProgressStore((state) => state.setSignedInToYouTube);
 
   if (providerRef.current === null) {
     providerRef.current = new YouTubeVideoProvider();
@@ -32,6 +33,14 @@ export function useYouTubeShortsBridge(config: XPConfig) {
     function handleWebViewMessage(event: WebViewMessageEvent) {
       const parsed = parseWebViewEvent(event.nativeEvent.data);
       if (!parsed) return;
+
+      // Handled entirely separately from video watch-tracking below - doesn't touch the
+      // debug store, video provider, or watch session tracker, none of which have a case
+      // for it (nor need one, since TS narrows `parsed` to exclude it past this point).
+      if (parsed.type === 'SIGN_IN_STATUS') {
+        setSignedInToYouTube(parsed.signedIn);
+        return;
+      }
 
       // Read the debug store imperatively (not via the reactive hook) - handleWebViewMessage
       // fires on every progress tick, and this component has no UI that depends on debug
@@ -76,5 +85,5 @@ export function useYouTubeShortsBridge(config: XPConfig) {
     }
 
     return { handleWebViewMessage };
-  }, [config, awardXP]);
+  }, [config, awardXP, setSignedInToYouTube]);
 }

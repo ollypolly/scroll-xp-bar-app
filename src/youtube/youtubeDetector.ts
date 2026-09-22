@@ -50,6 +50,10 @@ export class YouTubeVideoProvider implements VideoProvider {
           this.current = { ...this.current, position: event.position };
         }
         break;
+
+      // Handled upstream in useYouTubeShortsBridge before it ever reaches this provider.
+      case 'SIGN_IN_STATUS':
+        break;
     }
   }
 

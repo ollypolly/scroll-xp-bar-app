@@ -38,6 +38,7 @@ type ProgressState = {
   clearLastAward: () => void;
   clearLastLevelUp: () => void;
   completeOnboarding: () => void;
+  setSignedInToYouTube: (signedIn: boolean) => void;
 };
 
 export const useProgressStore = create<ProgressState>((set, get) => ({
@@ -96,6 +97,14 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
 
   completeOnboarding: () => {
     const updated: UserProgress = { ...get().progress, hasOnboarded: true };
+    set({ progress: updated });
+    void saveUserProgress(updated);
+  },
+
+  setSignedInToYouTube: (signedIn) => {
+    const current = get().progress;
+    if (current.isSignedInToYouTube === signedIn) return;
+    const updated: UserProgress = { ...current, isSignedInToYouTube: signedIn };
     set({ progress: updated });
     void saveUserProgress(updated);
   },

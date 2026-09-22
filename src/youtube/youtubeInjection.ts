@@ -12,6 +12,10 @@
  *  - A 350ms poll is a fallback for SPA navigations that don't reliably fire a
  *    detectable DOM event; `yt-navigate-finish`/`popstate` short-circuit it when
  *    they do fire.
+ *  - Sign-in status comes from `window.ytcfg.get('LOGGED_IN')`, an internal and
+ *    undocumented YouTube flag with no official alternative - it's read on the same
+ *    poll and only reported to RN when it changes, so it can go stale or disappear on
+ *    a YouTube change with no warning, same tolerance as the rest of this file.
  *
  * hideYouTubeChrome() and pushDownCaptions() are the exceptions to "no hard-coded
  * selectors" above - both are purely cosmetic CSS (never read from), so a wrong/stale
@@ -89,6 +93,18 @@ export const YOUTUBE_INJECTED_JAVASCRIPT = `
   }
 
   var state = { videoId: null, videoEl: null, lastProgressPostAt: 0, lastPosition: null };
+  var signInState = { checked: false, signedIn: false };
+
+  function checkSignInStatus() {
+    try {
+      var signedIn = !!(window.ytcfg && typeof window.ytcfg.get === 'function' && window.ytcfg.get('LOGGED_IN'));
+      if (!signInState.checked || signedIn !== signInState.signedIn) {
+        signInState.checked = true;
+        signInState.signedIn = signedIn;
+        post({ type: 'SIGN_IN_STATUS', signedIn: signedIn });
+      }
+    } catch (e) {}
+  }
 
   function onTimeUpdate(e) {
     var videoEl = e.target;
@@ -136,6 +152,8 @@ export const YOUTUBE_INJECTED_JAVASCRIPT = `
   }
 
   function tick() {
+    checkSignInStatus();
+
     var urlVideoId = getShortsVideoIdFromLocation();
     var activeEl = getActiveVideoElement();
 

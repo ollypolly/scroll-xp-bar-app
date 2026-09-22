@@ -38,6 +38,7 @@ export default function HomeScreen() {
   const level = useProgressStore((state) => state.level);
   const prestige = useProgressStore((state) => state.progress.prestige);
   const prestigeUp = useProgressStore((state) => state.prestigeUp);
+  const isSignedInToYouTube = useProgressStore((state) => state.progress.isSignedInToYouTube);
 
   const eligibleForPrestige = isLoaded && canPrestige(level.level, prestige);
 
@@ -92,9 +93,26 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity style={styles.signInButton} onPress={() => router.push('/signin')}>
-          <Text style={styles.signInButtonText}>Sign in to YouTube</Text>
-        </TouchableOpacity>
+        {isSignedInToYouTube ? (
+          <View style={styles.signedInRow}>
+            <View style={styles.signedInBadge}>
+              <Ionicons name="checkmark-circle" size={14} color={colors.accent} />
+              <Text style={styles.signedInBadgeText}>Signed in to YouTube</Text>
+            </View>
+            <View style={styles.signedInActions}>
+              <TouchableOpacity onPress={() => router.push('/signin')}>
+                <Text style={styles.signedInActionText}>Change account</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push({ pathname: '/signin', params: { mode: 'logout' } })}>
+                <Text style={styles.signedInActionText}>Log out</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.signInButton} onPress={() => router.push('/signin')}>
+            <Text style={styles.signInButtonText}>Sign in to YouTube</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity style={styles.button} onPress={() => router.push('/shorts')}>
           <Text style={styles.buttonText}>Start scrolling</Text>
@@ -186,5 +204,29 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontSize: 14,
     fontWeight: '700',
+  },
+  signedInRow: {
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  signedInBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  signedInBadgeText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  signedInActions: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  signedInActionText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });

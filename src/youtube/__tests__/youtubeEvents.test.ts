@@ -18,6 +18,11 @@ describe('parseWebViewEvent', () => {
     expect(event).toEqual({ type: 'VIDEO_PROGRESS', videoId: 'abc123', position: 5, duration: null });
   });
 
+  it('parses a SIGN_IN_STATUS event', () => {
+    const event = parseWebViewEvent(JSON.stringify({ type: 'SIGN_IN_STATUS', signedIn: true }));
+    expect(event).toEqual({ type: 'SIGN_IN_STATUS', signedIn: true });
+  });
+
   it('returns null for invalid JSON', () => {
     expect(parseWebViewEvent('not json')).toBeNull();
   });
@@ -29,5 +34,6 @@ describe('parseWebViewEvent', () => {
   it('returns null when required fields are missing', () => {
     expect(parseWebViewEvent(JSON.stringify({ type: 'VIDEO_STARTED' }))).toBeNull();
     expect(parseWebViewEvent(JSON.stringify({ type: 'VIDEO_PROGRESS', videoId: 'abc' }))).toBeNull();
+    expect(parseWebViewEvent(JSON.stringify({ type: 'SIGN_IN_STATUS' }))).toBeNull();
   });
 });

@@ -11,6 +11,10 @@ export type UserProgress = {
   prestige: number;
   /** Whether the one-time onboarding flow has been completed. */
   hasOnboarded: boolean;
+  /** Best-effort, last-known YouTube sign-in state - refreshed whenever the Shorts
+   * WebView is open (see youtubeInjection.ts's `checkSignInStatus`), so it can go stale
+   * between sessions but self-corrects the next time Shorts loads. */
+  isSignedInToYouTube: boolean;
 };
 
 export const DEFAULT_USER_PROGRESS: UserProgress = {
@@ -22,6 +26,7 @@ export const DEFAULT_USER_PROGRESS: UserProgress = {
   rewardedVideoIds: [],
   prestige: 0,
   hasOnboarded: false,
+  isSignedInToYouTube: false,
 };
 
 const STORAGE_KEY = '@shorts-xp/user-progress';

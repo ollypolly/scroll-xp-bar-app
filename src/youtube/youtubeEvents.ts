@@ -2,7 +2,8 @@ export type WebViewEvent =
   | { type: 'VIDEO_STARTED'; videoId: string; duration: number | null }
   | { type: 'VIDEO_PROGRESS'; videoId: string; position: number; duration: number | null }
   | { type: 'VIDEO_CHANGED'; previousVideoId: string | null; videoId: string; duration: number | null }
-  | { type: 'VIDEO_ENDED'; videoId: string; position: number; duration: number | null };
+  | { type: 'VIDEO_ENDED'; videoId: string; position: number; duration: number | null }
+  | { type: 'SIGN_IN_STATUS'; signedIn: boolean };
 
 /**
  * Parses a raw postMessage payload from the WebView. Returns null for anything
@@ -51,6 +52,9 @@ export function parseWebViewEvent(raw: string): WebViewEvent | null {
         position: event.position,
         duration: typeof event.duration === 'number' ? event.duration : null,
       };
+    case 'SIGN_IN_STATUS':
+      if (typeof event.signedIn !== 'boolean') return null;
+      return { type: 'SIGN_IN_STATUS', signedIn: event.signedIn };
     default:
       return null;
   }

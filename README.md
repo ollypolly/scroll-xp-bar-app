@@ -74,5 +74,6 @@ npm test             # jest
 ## Known limitations
 
 - The YouTube sign-in flow ("Sign in to YouTube" on the home screen) goes through Google's login inside a WebView with a spoofed user agent. Google actively detects and can block embedded-webview logins, so this may stop working at any time regardless of the workaround.
+- The home screen's "Signed in to YouTube" badge comes from `window.ytcfg.get('LOGGED_IN')`, an internal and undocumented YouTube flag with no official alternative, checked only while the Shorts WebView is open. It's best-effort and can go stale between sessions (e.g. right after "Log out", which sets it optimistically before the WebView confirms), self-correcting the next time Shorts loads.
 - XP-gain/level-up sound effects are disabled (`useEffectSounds` is a no-op): playing them activated the app's audio session and interrupted the WebView's video playback. Needs an audio-focus approach that doesn't compete with the video before re-enabling.
 - The Shorts screen's XP pill visually mimics a Dynamic Island but isn't a real one — see [BACKLOG.md](BACKLOG.md).
