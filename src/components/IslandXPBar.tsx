@@ -136,9 +136,7 @@ export function IslandXPBar() {
 
         {hasPrestige && (
           <View style={[styles.prestigeChip, { borderColor: prestigeInfo.color }]}>
-            <Text style={[styles.prestigeChipText, { color: prestigeInfo.color }]}>
-              {prestigeInfo.label.replace('Prestige ', '')}
-            </Text>
+            <Text style={[styles.prestigeChipText, { color: prestigeInfo.color }]}>{prestigeInfo.numeral}</Text>
           </View>
         )}
 

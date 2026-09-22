@@ -6,6 +6,7 @@ import { XPBar } from '../components/XPBar';
 import { useProgressStore } from '../store/progressStore';
 import { colors, radii, spacing, typography } from '../theme/tokens';
 import { canPrestige, getPrestigeInfo } from '../xp/badges';
+import { describeMovieTime, describeScrollDistance, describeWorkdayTime, estimateScrollDistanceMeters, xpPerHour } from '../xp/funStats';
 
 function formatWatchTime(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600);
@@ -46,7 +47,7 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.content}>
-        <XPBar />
+        <XPBar onBadgePress={() => router.push('/tiers')} />
 
         {eligibleForPrestige && (
           <TouchableOpacity style={styles.prestigeButton} onPress={handlePrestige}>
@@ -74,6 +75,24 @@ export default function ProfileScreen() {
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{progress.prestige}</Text>
             <Text style={styles.statLabel}>Prestiges</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.funStatValue}>
+              {describeScrollDistance(estimateScrollDistanceMeters(progress.totalShortsWatched))}
+            </Text>
+            <Text style={styles.statLabel}>Scrolled</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.funStatValue}>{describeMovieTime(progress.totalWatchTime)}</Text>
+            <Text style={styles.statLabel}>Watched</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.funStatValue}>{describeWorkdayTime(progress.totalWatchTime)}</Text>
+            <Text style={styles.statLabel}>Could have worked</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.funStatValue}>{xpPerHour(progress.totalXP, progress.totalWatchTime)} XP/hr</Text>
+            <Text style={styles.statLabel}>Earn rate</Text>
           </View>
         </View>
       </View>
@@ -142,6 +161,11 @@ const styles = StyleSheet.create({
   statValue: {
     color: colors.textPrimary,
     fontSize: 22,
+    fontWeight: '800',
+  },
+  funStatValue: {
+    color: colors.textPrimary,
+    fontSize: 16,
     fontWeight: '800',
   },
   statLabel: {

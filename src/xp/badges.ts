@@ -149,14 +149,15 @@ export const PRESTIGE_TIERS: PrestigeTier[] = [
 
 export const MAX_PRESTIGE = PRESTIGE_TIERS.length;
 
-export type PrestigeInfo = MaterialSurface & { prestige: number; label: string; name: string };
+export type PrestigeInfo = MaterialSurface & { prestige: number; numeral: string; label: string; name: string };
 
 export function getPrestigeInfo(prestige: number): PrestigeInfo {
   const clamped = Math.min(Math.max(Math.floor(prestige), 0), MAX_PRESTIGE);
-  if (clamped === 0) return { prestige: 0, label: '', name: '', material: 'metal', color: '' };
+  if (clamped === 0) return { prestige: 0, numeral: '', label: '', name: '', material: 'metal', color: '' };
   const tier = PRESTIGE_TIERS[clamped - 1];
   return {
     prestige: clamped,
+    numeral: tier.numeral,
     label: `Prestige ${tier.numeral}`,
     name: tier.name,
     material: tier.material,

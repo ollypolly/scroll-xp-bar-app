@@ -2,19 +2,27 @@
  * render (that's how RN's Animated API drives native-side interpolation); this predates and
  * is unrelated to the React Compiler assumptions this rule otherwise guards. */
 import { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getPrestigeInfo, getRankForLevel } from '../xp/badges';
 import { RankSurface } from './RankSurface';
 import { useProgressStore } from '../store/progressStore';
 import { colors, radii, spacing } from '../theme/tokens';
 
+type XPBarProps = {
+  /** When given, the whole bar becomes tappable (used by the profile screen to open the
+   * full rank/prestige ladder) - omitted elsewhere so the bar stays inert. The flashy
+   * material rendering (gradient/shine) is reserved for that ladder screen; this card just
+   * names the tier in plain text. */
+  onBadgePress?: () => void;
+};
+
 /**
  * A static, always-expanded level/XP summary card for screens that aren't overlaying
  * video content (home, debug) - the Shorts screen uses `IslandXPBar` instead, which
  * collapses down when there's nothing new to show.
  */
-export function XPBar() {
+export function XPBar({ onBadgePress }: XPBarProps) {
   const level = useProgressStore((state) => state.level);
   const prestige = useProgressStore((state) => state.progress.prestige);
 
@@ -48,7 +56,7 @@ export function XPBar() {
   const widthInterpolated = progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 
   return (
-    <View style={styles.container}>
+    <Pressable style={styles.container} onPress={onBadgePress} disabled={!onBadgePress}>
       <View style={styles.rankRow}>
         <RankSurface surface={rank} flash={levelFlashAnim} style={styles.header}>
           <Text style={styles.levelText}>
@@ -67,7 +75,7 @@ export function XPBar() {
           ? 'MAX LEVEL — ready to prestige'
           : `${level.xpIntoLevel.toLocaleString()} / ${level.xpForNextLevel.toLocaleString()} XP`}
       </Text>
-    </View>
+    </Pressable>
   );
 }
 
