@@ -6,7 +6,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { WebView, type WebViewNavigation } from 'react-native-webview';
 
 import { useEffectSounds } from '../audio/useEffectSounds';
-import { levelUpHaptic, xpGainHaptic } from '../haptics';
+import { levelUpHaptic } from '../haptics';
 import { useProgressStore } from '../store/progressStore';
 import { colors, radii, spacing } from '../theme/tokens';
 import { useYouTubeShortsBridge } from '../youtube/useYouTubeShortsBridge';
@@ -140,7 +140,7 @@ export function PersistentShortsView() {
             </TouchableOpacity>
           )}
 
-          <XPOrbBurst award={lastAward} spawnPoint={ORB_SPAWN_POINT} targetPoint={orbTarget} onOrbLanded={xpGainHaptic} />
+          <XPOrbBurst award={lastAward} spawnPoint={ORB_SPAWN_POINT} targetPoint={orbTarget} />
         </View>
 
         <LevelUpCelebration event={lastLevelUp} onDone={clearLastLevelUp} />

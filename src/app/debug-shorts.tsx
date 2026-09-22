@@ -8,7 +8,7 @@ import { DebugPanel } from '../components/DebugPanel';
 import { ISLAND_HEIGHT, IslandXPBar } from '../components/IslandXPBar';
 import { LevelUpCelebration } from '../components/effects/LevelUpCelebration';
 import { type Point, XPOrbBurst } from '../components/effects/XPOrbBurst';
-import { levelUpHaptic, xpGainHaptic } from '../haptics';
+import { levelUpHaptic } from '../haptics';
 import { useDebugStore } from '../store/debugStore';
 import { useProgressStore } from '../store/progressStore';
 import { colors, radii, spacing } from '../theme/tokens';
@@ -157,7 +157,7 @@ export default function DebugShortsScreen() {
           </View>
         </View>
 
-        <XPOrbBurst award={lastAward} spawnPoint={ORB_SPAWN_POINT} targetPoint={orbTarget} onOrbLanded={xpGainHaptic} />
+        <XPOrbBurst award={lastAward} spawnPoint={ORB_SPAWN_POINT} targetPoint={orbTarget} />
       </View>
 
       <LevelUpCelebration event={lastLevelUp} onDone={clearLastLevelUp} />

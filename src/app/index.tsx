@@ -85,7 +85,11 @@ export default function HomeScreen() {
           </Text>
         </View>
 
-        {isLoaded ? <XPBar /> : null}
+        {isLoaded ? (
+          <TouchableOpacity activeOpacity={0.8} onPress={() => router.push('/profile')}>
+            <XPBar />
+          </TouchableOpacity>
+        ) : null}
 
         {eligibleForPrestige && (
           <TouchableOpacity style={styles.prestigeButton} onPress={handlePrestige}>
