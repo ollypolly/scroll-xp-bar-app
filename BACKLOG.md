@@ -39,7 +39,10 @@ Needs, to actually get a build to a friend:
 - Adding the friend as an external (or internal, if on the same Apple dev team) TestFlight
   tester in App Store Connect - this step is entirely in Apple's UI, not automatable here.
 
-Status: in progress 2026-09-22 — icon/splash done, moving on to the EAS build/submit setup.
+Status: blocked 2026-09-22 — icon/splash done; confirmed not yet enrolled in the Apple
+Developer Program, so that's the next concrete action (developer.apple.com/programs/enroll,
+£99/year - enrollment/ID verification can take a few hours to a day). Nothing else in this
+item can proceed until that's active, since `eas build`/`eas submit` for iOS both need it.
 
 ## Swipe-back gesture doesn't work on the Shorts screen
 
