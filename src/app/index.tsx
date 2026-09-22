@@ -121,9 +121,11 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.button} onPress={() => router.dismissTo('/shorts')}>
           <Text style={styles.buttonText}>Start scrolling</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push('/debug')}>
-          <Text style={styles.debugLink}>Developer debug screen</Text>
-        </TouchableOpacity>
+        {process.env.EXPO_PUBLIC_SHOW_DEV_TOOLS === 'true' ? (
+          <TouchableOpacity onPress={() => router.push('/debug')}>
+            <Text style={styles.debugLink}>Developer debug screen</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     </SafeAreaView>
   );

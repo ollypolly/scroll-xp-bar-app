@@ -39,10 +39,18 @@ Needs, to actually get a build to a friend:
 - Adding the friend as an external (or internal, if on the same Apple dev team) TestFlight
   tester in App Store Connect - this step is entirely in Apple's UI, not automatable here.
 
-Status: blocked 2026-09-22 — icon/splash done; confirmed not yet enrolled in the Apple
-Developer Program, so that's the next concrete action (developer.apple.com/programs/enroll,
-£99/year - enrollment/ID verification can take a few hours to a day). Nothing else in this
-item can proceed until that's active, since `eas build`/`eas submit` for iOS both need it.
+Status: blocked 2026-09-22 — `eas.json`'s `production` build profile (no `distribution` set,
+defaults to `store`) and `submit.production` (empty, prompts interactively) are already
+correctly configured for a TestFlight-bound build - confirmed against current EAS docs, no
+changes needed. Tried `eas build --platform ios --profile production`: got past the "standard
+encryption" prompt and Apple ID login/2FA, but failed at "Authentication with Apple Developer
+Portal failed! You have no team associated with your Apple account." User enrolled as an
+individual (not an org); developer.apple.com/account initially looked active under the same
+Apple ID EAS is using, but turns out enrollment is still waiting on an Apple confirmation
+email - not actually finished provisioning yet, despite the account page looking done. Also
+matches a known lag issue either way: github.com/expo/eas-cli/issues/2072. Next: once that
+confirmation email lands and the team shows up properly, retry `eas build --platform ios
+--profile production`. No config changes needed once the team is provisioned.
 
 ## Swipe-back gesture doesn't work on the Shorts screen
 
