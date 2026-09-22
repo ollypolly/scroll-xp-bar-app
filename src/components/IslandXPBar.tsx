@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, type LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { getPrestigeInfo, getRankForLevel } from '../xp/badges';
+import { RankSurface } from './RankSurface';
 import { useProgressStore } from '../store/progressStore';
 import { colors, formatCompactNumber, radii, shadow, spacing } from '../theme/tokens';
 
@@ -118,15 +119,14 @@ export function IslandXPBar() {
   const width = expandAnim.interpolate({ inputRange: [0, 1], outputRange: [collapsedWidth, EXPANDED_WIDTH] });
   const collapsedOpacity = expandAnim.interpolate({ inputRange: [0, 0.35, 1], outputRange: [1, 0, 0] });
   const expandedOpacity = expandAnim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 0, 1] });
-  const badgeBackground = flashAnim.interpolate({ inputRange: [0, 1], outputRange: [rank.color, colors.gold] });
   const progressWidth = progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
 
   return (
     <Pressable onPress={handlePress} style={styles.pressable}>
       <Animated.View style={[styles.island, shadow.island, { width }]}>
-        <Animated.View style={[styles.badge, { backgroundColor: badgeBackground }]}>
+        <RankSurface rank={rank} flash={flashAnim} style={styles.badge}>
           <Text style={styles.badgeText}>{level.level}</Text>
-        </Animated.View>
+        </RankSurface>
 
         {hasPrestige && (
           <View style={[styles.prestigeChip, { borderColor: prestigeInfo.color }]}>
@@ -145,7 +145,7 @@ export function IslandXPBar() {
 
           <Animated.View style={[styles.expandedContent, { opacity: expandedOpacity }]} pointerEvents="none">
             <View style={styles.track}>
-              <Animated.View style={[styles.progress, { width: progressWidth, backgroundColor: rank.color }]} />
+              <RankSurface rank={rank} style={[styles.progress, { width: progressWidth }]} />
             </View>
             <Text style={styles.xpText}>
               {level.isMaxLevel
@@ -184,9 +184,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   badgeText: {
-    color: '#171717',
+    color: '#fff',
     fontSize: 11,
     fontWeight: '800',
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   prestigeChip: {
     height: 18,
@@ -229,7 +232,6 @@ const styles = StyleSheet.create({
   progress: {
     height: '100%',
     borderRadius: radii.sm,
-    backgroundColor: colors.accent,
   },
   xpText: {
     color: colors.textSecondary,

@@ -37,6 +37,7 @@ type ProgressState = {
   prestigeUp: () => void;
   clearLastAward: () => void;
   clearLastLevelUp: () => void;
+  completeOnboarding: () => void;
 };
 
 export const useProgressStore = create<ProgressState>((set, get) => ({
@@ -92,4 +93,10 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
 
   clearLastAward: () => set({ lastAward: null }),
   clearLastLevelUp: () => set({ lastLevelUp: null }),
+
+  completeOnboarding: () => {
+    const updated: UserProgress = { ...get().progress, hasOnboarded: true };
+    set({ progress: updated });
+    void saveUserProgress(updated);
+  },
 }));

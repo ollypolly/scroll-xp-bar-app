@@ -31,4 +31,18 @@ describe('persistence', () => {
     const progress = await loadUserProgress();
     expect(progress).toEqual(DEFAULT_USER_PROGRESS);
   });
+
+  it('treats progress saved before hasOnboarded existed as already onboarded if it has watch history', async () => {
+    await AsyncStorage.setItem(
+      '@shorts-xp/user-progress',
+      JSON.stringify({ totalXP: 500, totalShortsWatched: 3 }),
+    );
+    const progress = await loadUserProgress();
+    expect(progress.hasOnboarded).toBe(true);
+  });
+
+  it('does not mark a genuinely fresh install as onboarded', async () => {
+    const progress = await loadUserProgress();
+    expect(progress.hasOnboarded).toBe(false);
+  });
 });

@@ -1,5 +1,5 @@
 {
-  "name": "scroll-xp-bar-app",
+  "name": "one-more",
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
@@ -9,6 +9,7 @@
     "expo-audio": "~57.0.5",
     "expo-constants": "~57.0.19",
     "expo-haptics": "~57.0.3",
+    "expo-linear-gradient": "~57.0.2",
     "expo-linking": "~57.0.10",
     "expo-router": "~57.0.22",
     "expo-status-bar": "~57.0.1",

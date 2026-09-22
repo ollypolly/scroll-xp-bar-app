@@ -1,21 +1,27 @@
-# Shorts XP
+# One More
 
-Wraps YouTube Shorts in a WebView and layers an XP/leveling game on top, so scrolling feels like grinding.
+*just one more.*
+
+Wraps a short-form video feed (YouTube Shorts today) in a WebView and layers an honest
+XP/leveling game on top — it doesn't pretend the scroll is good for you, it just puts a
+scoreboard on the loop you're already in.
 
 ## How it works
 
-- A hidden script observes the YouTube Shorts page (video changes, playback position, duration) and posts typed events back to the native side over the WebView bridge.
+- A hidden script observes the video feed (video changes, playback position, duration) and posts typed events back to the native side over the WebView bridge.
 - A watch-session tracker uses each video's *max* playback position (not just the latest tick) to compute a watch percentage, so seeking backward can't be used to fake progress.
 - XP is awarded once per video (on scroll-away or on the video looping back to the start), proportional to seconds actually watched, with a minimum watch-percentage threshold before anything is granted — a longer Short fully watched earns more than a shorter one fully watched.
 - Levels follow a RuneScape-style exponential curve capped at level 99 (RuneScape's own cap) — the first couple of levels come quickly, then the XP required ramps up steeply. Hitting 99 unlocks prestiging back to level 1, up to 10 times.
-- A native overlay (not a WebView DOM overlay, which YouTube's own page can occlude or break) shows the current level and XP bar at all times, with a Minecraft-style orb animation on XP gain and a full-screen flourish on level-up (with a tap-to-prestige button once eligible), backed by haptics and sound effects.
+- Rank tiers escalate materially as you climb: plain wood at level 1, through bronze/iron/silver/gold, into genuinely animated gem tiers (emerald → sapphire → ruby → a prismatic top tier) with a looping shine sweep — see `RankSurface`.
+- The one saturated color in an otherwise monochrome UI is the active source's accent (YouTube red today) — see `SOURCE_ACCENTS` in `src/theme/tokens.ts`, keyed so a future second source gets its own accent without a redesign.
+- A native overlay (not a WebView DOM overlay, which the page itself can occlude or break) shows the current level and XP bar at all times, with a Minecraft-style orb animation on XP gain and a full-screen flourish on level-up (with a tap-to-prestige button once eligible), backed by haptics and sound effects.
 
 ## Stack
 
 - Expo (React Native, TypeScript) with Expo Router for navigation
-- `react-native-webview` for the Shorts page, with an injected observation-only script
+- `react-native-webview` for the video feed, with an injected observation-only script
 - Zustand + AsyncStorage for XP/level state persistence
-- React Native's built-in `Animated` API for the orb-burst and level-up animations
+- React Native's built-in `Animated` API plus `expo-linear-gradient` for the orb-burst, level-up, and gem-tier shimmer animations
 - `expo-haptics` / `expo-audio` for feedback
 
 ## Running

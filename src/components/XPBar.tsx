@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import { getPrestigeInfo, getRankForLevel } from '../xp/badges';
+import { RankSurface } from './RankSurface';
 import { useProgressStore } from '../store/progressStore';
 import { colors, radii, spacing } from '../theme/tokens';
 
@@ -45,22 +46,21 @@ export function XPBar() {
   }, [level.level, levelFlashAnim]);
 
   const widthInterpolated = progressAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] });
-  const headerBackground = levelFlashAnim.interpolate({ inputRange: [0, 1], outputRange: [rank.color, colors.gold] });
 
   return (
     <View style={styles.container}>
       <View style={styles.rankRow}>
-        <Animated.View style={[styles.header, { backgroundColor: headerBackground }]}>
+        <RankSurface rank={rank} flash={levelFlashAnim} style={styles.header}>
           <Text style={styles.levelText}>
             {rank.icon} {rank.name.toUpperCase()} · LV {level.level}
           </Text>
-        </Animated.View>
+        </RankSurface>
         {prestige > 0 && (
           <Text style={[styles.prestigeText, { color: prestigeInfo.color }]}>{prestigeInfo.label}</Text>
         )}
       </View>
       <View style={styles.track}>
-        <Animated.View style={[styles.progress, { width: widthInterpolated, backgroundColor: rank.color }]} />
+        <RankSurface rank={rank} style={[styles.progress, { width: widthInterpolated }]} />
       </View>
       <Text style={styles.xpText}>
         {level.isMaxLevel
@@ -93,10 +93,13 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   levelText: {
-    color: '#171717',
+    color: '#fff',
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.5,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   prestigeText: {
     fontSize: 11,
@@ -112,7 +115,6 @@ const styles = StyleSheet.create({
   progress: {
     height: '100%',
     borderRadius: 4,
-    backgroundColor: colors.accent,
   },
   xpText: {
     color: colors.textSecondary,

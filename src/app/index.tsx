@@ -1,19 +1,28 @@
 import { router } from 'expo-router';
+import { useEffect } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Logo } from '../components/Logo';
 import { XPBar } from '../components/XPBar';
 import { useProgressStore } from '../store/progressStore';
 import { colors, radii, spacing, typography } from '../theme/tokens';
 import { canPrestige, getPrestigeInfo } from '../xp/badges';
 
-export default function OnboardingScreen() {
+/** The home screen. First-ever launch bounces straight to `/onboarding` instead - this
+ * screen is what you land on for every visit after that. */
+export default function HomeScreen() {
   const isLoaded = useProgressStore((state) => state.isLoaded);
+  const hasOnboarded = useProgressStore((state) => state.progress.hasOnboarded);
   const level = useProgressStore((state) => state.level);
   const prestige = useProgressStore((state) => state.progress.prestige);
   const prestigeUp = useProgressStore((state) => state.prestigeUp);
 
   const eligibleForPrestige = isLoaded && canPrestige(level.level, prestige);
+
+  useEffect(() => {
+    if (isLoaded && !hasOnboarded) router.replace('/onboarding');
+  }, [isLoaded, hasOnboarded]);
 
   function handlePrestige() {
     const next = getPrestigeInfo(prestige + 1);
@@ -27,11 +36,14 @@ export default function OnboardingScreen() {
     );
   }
 
+  // Redirecting to /onboarding - skip painting the home screen behind it.
+  if (isLoaded && !hasOnboarded) return null;
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.titleRow}>
-          <Text style={styles.title}>Shorts XP</Text>
+          <Logo />
           <TouchableOpacity style={styles.accountButton} onPress={() => router.push('/signin')}>
             <Text style={styles.accountButtonText}>{'\u{1F464}'}</Text>
           </TouchableOpacity>
@@ -79,10 +91,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  title: {
-    ...typography.title,
-    color: colors.textPrimary,
   },
   accountButton: {
     width: 40,

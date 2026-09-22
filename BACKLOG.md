@@ -23,3 +23,20 @@ Making it real requires:
 - iOS 16.1+ only. No Android equivalent.
 
 Status: deferred 2026-09-21 — holding off on the dev-client migration for now.
+
+## App icon and launch screen
+
+The app was rebranded to "One More" (2026-09-22: name, source-accent color system,
+wood-to-gem rank tiers, onboarding flow), but `assets/icon.png` and the Android adaptive
+icon layers are still the old placeholder artwork — nothing generates real image assets,
+so this needs actual design input (or a design tool) rather than a code change.
+
+Needs:
+
+- A real app icon (`assets/icon.png`) reflecting the new brand — dark background, the
+  source-accent color as the one live accent, per the design language in the README.
+- Updated Android adaptive icon layers (`foregroundImage`/`backgroundImage`/`monochromeImage`
+  in `app.json`).
+- A launch/splash screen matching the same look, if `expo-splash-screen` gets added later.
+
+Status: deferred 2026-09-22 — blocking on real artwork.

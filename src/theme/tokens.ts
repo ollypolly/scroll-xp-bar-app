@@ -4,6 +4,19 @@
  * and can be re-tuned in one place.
  */
 
+/**
+ * One More wraps a rotating cast of sources (just YouTube today). Each source gets one
+ * "living" accent color, keyed off the site it's wrapping - everything else in the UI
+ * stays neutral so this is the only saturated thing on screen. Add a new source's own
+ * brand color here when a second one ships; DEFAULT_SOURCE picks which one is active
+ * until the app actually supports switching between sources at runtime.
+ */
+export const SOURCE_ACCENTS = {
+  youtube: '#ff0033',
+} as const;
+
+export const DEFAULT_SOURCE: keyof typeof SOURCE_ACCENTS = 'youtube';
+
 export const colors = {
   background: '#0b0b10',
   surface: '#16161f',
@@ -14,8 +27,8 @@ export const colors = {
   textSecondary: 'rgba(245,245,247,0.68)',
   textMuted: 'rgba(245,245,247,0.4)',
 
-  accent: '#8b5cf6',
-  accentStrong: '#7c3aed',
+  accent: SOURCE_ACCENTS[DEFAULT_SOURCE],
+  accentStrong: '#cc0029',
   gold: '#fbbf24',
   like: '#ff375f',
 
