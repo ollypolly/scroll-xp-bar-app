@@ -43,6 +43,17 @@ Every dependency in this project (WebView, AsyncStorage, haptics, audio, safe-ar
 
 Your machine needs to keep the dev server running for the session. For something that survives you going offline (e.g. multi-day testing), publish a hosted build instead with `eas update`.
 
+### Long-standing installs via TestFlight
+
+EAS is already scaffolded (`eas.json`, project `@ollypolly/one-more`) for a persistent, no-Expo-Go install:
+
+1. Enroll in the Apple Developer Program (developer.apple.com, $99/yr) — required for any standalone iOS distribution.
+2. `npx eas-cli@latest build --platform ios --profile production` — builds a store-ready binary.
+3. `npx eas-cli@latest submit --platform ios` — uploads it to App Store Connect. First run prompts for Apple credentials and to fill in `submit.production.ios.ascAppId` in `eas.json` (from the app's App Information page in App Store Connect, created automatically on first submit if it doesn't exist yet).
+4. Add testers as external testers in App Store Connect's TestFlight tab (just needs their email) — they install the TestFlight app and accept the invite.
+
+After that, most changes (this app has no custom native modules) can ship instantly with `npx eas-cli@latest update` instead of a new build/submit cycle — only native config changes need a new binary.
+
 ## Scripts
 
 ```bash
