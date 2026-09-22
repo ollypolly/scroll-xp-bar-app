@@ -40,3 +40,31 @@ Needs:
 - A launch/splash screen matching the same look, if `expo-splash-screen` gets added later.
 
 Status: deferred 2026-09-22 — blocking on real artwork.
+
+## Swipe-back gesture doesn't work on the Shorts screen
+
+The Shorts screen keeps its WebView alive by never letting it be popped - the home icon
+and "Start scrolling" only ever `push`/`dismissTo` (see `src/app/shorts.tsx` and the home
+screen's button), so leaving and returning resumes the same session instead of reloading
+YouTube. iOS's native edge-swipe-to-go-back gesture bypasses that entirely though: it
+triggers React Navigation's plain pop directly, which isn't even reaching JS right now -
+swiping back from Shorts does nothing, while the same gesture works fine on every other
+screen in the stack (confirmed 2026-09-22 by testing on device: home → Shorts → swipe
+back → nothing; Shorts → home button → swipe back → correctly returns to the live feed).
+
+Likely cause: the full-bleed WebView's own touch handling is winning the touch-arbitration
+race against the native edge-pan gesture recognizer - a known category of friction between
+`react-native-webview` and native-stack navigators, not something with a documented one-line
+fix.
+
+Two possible directions, both needing on-device iteration to verify (not diagnosable
+without a real device):
+
+- Find a way to let the OS edge gesture win the race (some `react-native-webview`/gesture
+  configuration), then intercept the resulting pop (e.g. `beforeRemove`) and redirect it to
+  the same push-based "go home" navigation the button uses, so it doesn't destroy the WebView.
+- Or explicitly set `gestureEnabled: false` for this screen so the disabled gesture is a
+  deliberate choice instead of an accidental side effect, and rely on the home button as the
+  only way off Shorts.
+
+Status: deferred 2026-09-22 — home button remains the reliable way off Shorts in the meantime.

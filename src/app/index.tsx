@@ -118,7 +118,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         )}
 
-        <TouchableOpacity style={styles.button} onPress={() => router.push('/shorts')}>
+        <TouchableOpacity style={styles.button} onPress={() => router.dismissTo('/shorts')}>
           <Text style={styles.buttonText}>Start scrolling</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={() => router.push('/debug')}>
