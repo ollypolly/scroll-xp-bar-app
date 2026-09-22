@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { PersistentShortsView } from '../components/PersistentShortsView';
 import { useDebugStore } from '../store/debugStore';
 import { useProgressStore } from '../store/progressStore';
 
@@ -19,6 +20,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <StatusBar style="light" />
       <Stack screenOptions={{ headerShown: false }} />
+      <PersistentShortsView />
     </SafeAreaProvider>
   );
 }
