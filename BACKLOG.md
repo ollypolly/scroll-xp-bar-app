@@ -2,44 +2,40 @@
 
 Deferred ideas, not yet scheduled.
 
-## Real iOS Dynamic Island / Live Activity
+## Rename the GitHub repo to match the app
 
-The Shorts screen currently shows an in-app pill (`IslandXPBar`) that visually mimics the
-Dynamic Island — level + XP, collapses/expands — but it's just a React Native view. It
-doesn't touch the actual OS-level Dynamic Island, so it disappears when the app isn't in
-the foreground.
+Still `ollypolly/scroll-xp-bar-app` from before the "One More" rebrand. `app.json` already
+uses the new identity everywhere else (slug `one-more`, bundle id `com.ollypolly.onemore`),
+so the repo name is the one remaining leftover.
 
-Making it real requires:
+Needs: `gh repo rename one-more` (or via GitHub's UI), then `git remote set-url origin
+<new-url>` locally so this clone keeps pushing/pulling correctly. GitHub redirects the old
+URL for a while, so this is low-risk, just not done yet.
 
-- A native widget extension using ActivityKit (Swift/SwiftUI) for the Live Activity's
-  compact/minimal/expanded Dynamic Island regions. Expo Go can't run this.
-- Migrating iOS testing off Expo Go onto a custom dev client — either `npx expo run:ios`
-  locally (needs Xcode), or `eas build --profile development` in the cloud.
-- Likely path: the `@bacons/apple-targets` config plugin to define the widget/Live
-  Activity extension target from within the Expo-managed workflow (no hand-edited `ios/`
-  directory), plus a small native module bridging `progressStore`'s level/XP state to
-  start/update/end the Activity. Check current docs before implementing — don't assume
-  API shape from training data.
-- iOS 16.1+ only. No Android equivalent.
+Status: deferred 2026-09-22 — can wait.
 
-Status: deferred 2026-09-21 — holding off on the dev-client migration for now.
+## Next up: TestFlight build to get in a mate's hands
 
-## App icon and launch screen
+App icon and launch screen are done (2026-09-22): a glowing accent-colored orb on the
+dark brand background - the same "one saturated color" motif as the in-app Logo's
+accent-colored period and the XP orb pickup effect, generated locally with Pillow rather
+than waiting on external artwork. Covers `assets/icon.png`, the Android adaptive icon
+layers (`foregroundImage`/`backgroundImage`/`monochromeImage`), the favicon, and
+`expo-splash-screen` (newly installed and configured in `app.json`). `expo-doctor`
+21/21, typecheck/lint/tests all clean.
 
-The app was rebranded to "One More" (2026-09-22: name, source-accent color system,
-wood-to-gem rank tiers, onboarding flow), but `assets/icon.png` and the Android adaptive
-icon layers are still the old placeholder artwork — nothing generates real image assets,
-so this needs actual design input (or a design tool) rather than a code change.
+Needs, to actually get a build to a friend:
 
-Needs:
+- An EAS build profile suited for TestFlight-only sharing (internal distribution or a
+  `preview`/`production` profile - check `eas.json`, since a prior session scaffolded an
+  EAS project already per the "Scaffold EAS project and TestFlight build pipeline" commit).
+- `eas build --platform ios` (needs an Apple Developer account signed in to EAS - only
+  the user can authenticate this).
+- `eas submit` to push the build to App Store Connect, or manual upload.
+- Adding the friend as an external (or internal, if on the same Apple dev team) TestFlight
+  tester in App Store Connect - this step is entirely in Apple's UI, not automatable here.
 
-- A real app icon (`assets/icon.png`) reflecting the new brand — dark background, the
-  source-accent color as the one live accent, per the design language in the README.
-- Updated Android adaptive icon layers (`foregroundImage`/`backgroundImage`/`monochromeImage`
-  in `app.json`).
-- A launch/splash screen matching the same look, if `expo-splash-screen` gets added later.
-
-Status: deferred 2026-09-22 — blocking on real artwork.
+Status: in progress 2026-09-22 — icon/splash done, moving on to the EAS build/submit setup.
 
 ## Swipe-back gesture doesn't work on the Shorts screen
 
@@ -67,4 +63,26 @@ without a real device):
   deliberate choice instead of an accidental side effect, and rely on the home button as the
   only way off Shorts.
 
-Status: deferred 2026-09-22 — home button remains the reliable way off Shorts in the meantime.
+Status: deferred 2026-09-22 — can wait, home button remains the reliable way off Shorts.
+
+## Real iOS Dynamic Island / Live Activity
+
+The Shorts screen currently shows an in-app pill (`IslandXPBar`) that visually mimics the
+Dynamic Island — level + XP, collapses/expands — but it's just a React Native view. It
+doesn't touch the actual OS-level Dynamic Island, so it disappears when the app isn't in
+the foreground.
+
+Making it real requires:
+
+- A native widget extension using ActivityKit (Swift/SwiftUI) for the Live Activity's
+  compact/minimal/expanded Dynamic Island regions. Expo Go can't run this.
+- Migrating iOS testing off Expo Go onto a custom dev client — either `npx expo run:ios`
+  locally (needs Xcode), or `eas build --profile development` in the cloud.
+- Likely path: the `@bacons/apple-targets` config plugin to define the widget/Live
+  Activity extension target from within the Expo-managed workflow (no hand-edited `ios/`
+  directory), plus a small native module bridging `progressStore`'s level/XP state to
+  start/update/end the Activity. Check current docs before implementing — don't assume
+  API shape from training data.
+- iOS 16.1+ only. No Android equivalent.
+
+Status: deferred 2026-09-21 — can wait, holding off on the dev-client migration.
